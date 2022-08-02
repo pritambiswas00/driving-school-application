@@ -9,7 +9,7 @@
     "prebuild": "rimraf dist",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "node dist/main",
+    "start": "node vercel/output/dist/main",
     "start:dev": "cross-env NODE_ENV=dev nest start copy --watch",
     "start:devvm": "NODE_ENV=dev forever start dist/main.js",
     "start:debug": "nest start --debug --watch",
