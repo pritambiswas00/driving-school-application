@@ -26,7 +26,7 @@ console.log()
   imports: [
     AuthModule,
     ConfigModule.forRoot({
-       envFilePath: path.join(__dirname, "..",`${process.env.NODE_ENV}.env`),
+       envFilePath: path.join(__dirname, "..",`.env`),
        isGlobal: true,
        load : [configuration],
        validationSchema : configValidation,
