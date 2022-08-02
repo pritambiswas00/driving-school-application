@@ -1,0 +1,92 @@
+import { Controller, Inject, Get, Logger, Post, Body, Param, Patch, Delete, Session, UseInterceptors, UseGuards, HttpStatus, Headers, Query } from '@nestjs/common';
+import { AuthService } from "../Services/auth.service";
+import { LoginUser, UserPayload } from '../Dtos/auth.user.Dtos';
+import { ConfigService } from '@nestjs/config';
+import {
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { IsUser } from 'src/Decorators/isUser.decorator';
+import { IsUserInterceptor } from 'src/Interceptors/isUser.interceptor';
+import { UserGuard } from 'src/Guards/isUser.guard';
+import { CreateSchedule, UpdateSchedule } from 'src/Dtos/schedule.dtos';
+import { ObjectId } from 'mongodb';
+import { Login } from 'src/Dtos/admin.dtos';
+import { User } from 'src/Entity/user.model';
+
+
+@ApiTags("User")
+@Controller('auth')
+@UseInterceptors(IsUserInterceptor)
+export class AuthController {
+  constructor(
+   private readonly authService: AuthService, private readonly config: ConfigService
+  ){}
+  //////////////Login User///////////////////////
+  @ApiOperation({ summary: 'Login User *' })
+  @ApiResponse({ status: 200, description: 'User Logged in' })
+  @ApiResponse({ status: 403, description: 'Forbidden. Not Authenticated.' })
+  @Post("/login")
+  async login (@Body() body: LoginUser) {
+    const token = await this.authService.login(body);
+    return {
+        status: HttpStatus.OK,
+        message: "Successfully logged in...",
+        access_token: token
+    }
+  }
+
+
+  /////////////Logout User///////////////
+  @ApiOperation({ summary: 'Logout User *' })
+  @Post("/logout")
+  @UseGuards(UserGuard)
+  async logout (@Headers("Authorization") authToken:string, @IsUser() userPayload: UserPayload ) {
+          const token = authToken.replace("Bearer ", "");
+          const logoutUser:string= await this.authService.logout(token, userPayload);
+          return {
+              status :HttpStatus.OK,
+              message : logoutUser
+          }
+  }
+
+  ///////////User Schedule Create///////////////
+  @ApiOperation({ summary: 'Create Schedule *' })
+  @Post("/user/schedule/create")
+  @UseGuards(UserGuard)
+  async createSchedule(@Body() body: CreateSchedule, @IsUser() user: any) {
+         console.log(user, "USER IN CREATE SCHEDULE")
+        const newSchedule = await this.authService.createSchedule(body, user._id);
+        return {
+            status :HttpStatus.OK,
+            schedule: newSchedule
+        }
+  }
+
+  @ApiOperation({ summary: 'Get Schedules *' })
+  @Get("/user/schedule")
+  @UseGuards(UserGuard)
+  async getSchedule(@IsUser() user: any, @Query("status") status : string | undefined) {
+       const allSchedules = await this.authService.getSchedules(user._id, status);
+       return {
+           status :HttpStatus.OK,
+           allSchedules : allSchedules
+       }
+  }
+
+  @ApiOperation({ summary: 'Edit Schedule *' })
+  @Patch("/user/schedule/edit/:scheduleId")
+  @UseGuards(UserGuard)
+  async editSchedule(@Body() body:UpdateSchedule, @Param("scheduleId") scheduleId: ObjectId, @IsUser() user: any) {
+        return this.authService.updateSchedule(body, scheduleId);
+  }
+
+  @ApiOperation({ summary: 'Delete Schedule *' })
+  @Delete("/user/schedule/delete/:scheduleId")
+  @UseGuards(UserGuard)
+  async deleteSchedule(@Param("scheduleId") scheduleId: ObjectId, @IsUser() user: any) {
+       return this.authService.deleteSchedule(scheduleId);
+  }
+
+}

@@ -1,0 +1,49 @@
+###########################################################################
+                          ###Admin User #####
+
+///Admin Login/// 
+
+POST http://localhost:4000/admin/login
+Content-Type: application/json
+
+{
+    "email": "pritam1@mail.com",
+    "password" : "pritam@123"
+    
+}
+
+####Logout####
+POST http://localhost:4000/admin/logout
+Content-Type: application/json;
+
+{
+    
+}
+
+###Get All Users####
+GET http://localhost:4000/admin/getAllUsers
+Content-Type: application/json;
+
+###Add User###
+POST http://localhost:4000/admin/addUser
+Content-Type: application/json;
+
+{
+    "billnumber": "123axcdsadad",
+    "email":"pritam@gmail.com",
+    "phonenumber":"+918017393446",
+    "name": "Pritam",
+    "startDate":"10/22/2022",
+    "password": "pritam"
+}
+ObjectId("62d8677040e3e0459440dead")
+
+###Edit User####
+PATCH http://localhost:4000/admin/editUser/62d8677040e3e0459440dead
+Content-Type: application/json;
+
+{
+    "email":"pritamchange@mail.com"
+}
+
+
