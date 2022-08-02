@@ -44,10 +44,10 @@ async function bootstrap() {
   ///Csurf///
   // app.use(csurf())
 
-  const PORT = +configService.get("PORT") || process.env.PORT
+  const PORT = +configService.get("PORT"); 
   await app.listen(PORT, () => {
        console.log(`Environment : ${configService.get("ENV")}`);
-       console.log(`Server listening at http://localhost:${PORT|| process.env.PORT}`);
+       console.log(`Server listening at http://localhost:${PORT || process.env.PORT}`);
   });
 }
 bootstrap();
