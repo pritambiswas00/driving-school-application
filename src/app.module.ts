@@ -22,7 +22,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
 import { join } from 'path';
 import { MailerModule } from '@nestjs-modules/mailer';
 console.log()
-@Module({
+@Module({ 
   imports: [
     AuthModule,
     ConfigModule.forRoot({
