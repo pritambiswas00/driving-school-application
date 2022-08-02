@@ -15,7 +15,7 @@ export class AppService {
     constructor(@InjectModel(Admin.name) private readonly adminModel: Model<AdminDocument>, private readonly configService:ConfigService, private readonly utilService: UtilService, private readonly jwtService: JwtService) {}
 
 
-     login (@Body() superadmin: Login) {
+     login (@Body() superadmin: Login) { 
             const superAdminUsername = this.configService.get("SUPER_ADMIN_USERNAME");
             const superAdminPassword = this.configService.get("SUPER_ADMIN_PASSWORD");
            if(superadmin.email !== superAdminUsername) {
