@@ -21,7 +21,6 @@ import { JwtModule, JwtModuleOptions, JwtService } from '@nestjs/jwt';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { join } from 'path';
 import { MailerModule } from '@nestjs-modules/mailer';
-console.log()
 @Module({ 
   imports: [
     AuthModule,
