@@ -31,7 +31,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
           const options:JwtModuleOptions = {
               secret: config.get("JWT_SECRET_ADMIN"),
               signOptions: {
-                  expiresIn: `${config.get("JWT_EXPIRATION_IN_SECONDS")}s`,
+                  expiresIn: `${config.get<string>("JWT_EXPIRATION_IN_SECONDS")}s`,
               }
           }
           return options;

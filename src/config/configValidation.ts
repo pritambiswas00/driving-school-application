@@ -6,7 +6,7 @@ export const configValidation = Joi.object({
     DBURI : Joi.string(),
     DATABASE : Joi.string(),
     OPT_VALIDATION_LENGTH : Joi.string().default(4),
-    JWT_EXPIRES_TIME: Joi.string().default("60"),
+    JWT_EXPIRATION_IN_SECONDS: Joi.string().default("3600"),
     TTL : Joi.number().default(10),
     RATE_LIMIT : Joi.number().default(60),
     SUPER_ADMIN_PASSWORD: Joi.string().default("admin@admin.com"),

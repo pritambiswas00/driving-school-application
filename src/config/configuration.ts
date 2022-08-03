@@ -8,7 +8,7 @@ export const configuration = () => {
         JWT_SECRET_ROOT : process.env.JWT_SECRET_ROOT,
         JWT_SECRET_AUTH : process.env.JWT_SECRET_AUTH,
         JWT_SECRET_ADMIN : process.env.JWT_SECRET_ADMIN,
-        JWT_EXPIRES_TIME: process.env.JWT_EXPIRES_TIME,
+        JWT_EXPIRATION_IN_SECONDS: process.env.JWT_EXPIRATION_IN_SECONDS,
         TTL:process.env.TTL,
         RATE_LIMIT : process.env.RATE_LIMIT,
         SUPER_ADMIN_USERNAME: process.env.SUPER_ADMIN_USERNAME,

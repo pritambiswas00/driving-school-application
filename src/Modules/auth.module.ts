@@ -33,7 +33,7 @@ import { MailerModule, MailerService } from '@nestjs-modules/mailer';
           const options:JwtModuleOptions = {
               secret: config.get<string>("JWT_SECRET_AUTH"),
               signOptions: {
-                  expiresIn:`${config.get<string>("JWT_EXPIRES_TIME")}s`,
+                  expiresIn:`${config.get<string>("JWT_EXPIRATION_IN_SECONDS")}s`,
               }
           }
           return options;
