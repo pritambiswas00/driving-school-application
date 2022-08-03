@@ -32,7 +32,7 @@ export class TrainerCreate {
     public email : string;
 
     @ApiProperty({ required: true })
-    @Matches(/^[6-9]\d{9}$/gi, { message:"Phone number must be 10 digits." })
+    @Matches(/^[6-9]\d{9}$/i, { message:"Phone number must be 10 digits."})
     @IsString()
     @IsNotEmpty()
     public phonenumber : string;
@@ -78,13 +78,13 @@ export class TrainerUpdate {
     public vin ?: string;
 
     @ApiProperty({
+        required: false,
         enum: TrainerStatus,
         isArray: true,
-        example: [TrainerStatus.ONLINE, TrainerStatus.OFFLINE],
     })
     @IsEnum(TrainerStatus)
     @IsOptional()
-    public status: TrainerStatus[];
+    public status: TrainerStatus;
 }
 
 

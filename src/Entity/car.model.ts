@@ -6,20 +6,20 @@ export type CarDocument = Car & Document;
 
 @Schema()
 export class Car {
-  @Prop({ type: String, required : true, max: 20})
-  vin: string;
+  @Prop({ type: String, required : true, max: 20, unique: true})
+  public vin: string;
 
   @Prop({type: String, required : true, max:20})
-  make: string;
+  public make: string;
 
   @Prop({ type : String, required : true, max: 20})
-  model : string;
+  public model : string;
 
   @Prop({ required: false, default : Date.now })
-  updatedAt : Date
+  public updatedAt : Date
 
   @Prop({ required : false, default : Date.now })
-  createdAt : Date
+  public createdAt : Date
 }
 
 export const CarSchema = SchemaFactory.createForClass(Car);

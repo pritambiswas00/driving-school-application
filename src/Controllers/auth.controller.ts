@@ -56,7 +56,6 @@ export class AuthController {
   @Post("/user/schedule/create")
   @UseGuards(UserGuard)
   async createSchedule(@Body() body: CreateSchedule, @IsUser() user: any) {
-         console.log(user, "USER IN CREATE SCHEDULE")
         const newSchedule = await this.authService.createSchedule(body, user._id);
         return {
             status :HttpStatus.OK,

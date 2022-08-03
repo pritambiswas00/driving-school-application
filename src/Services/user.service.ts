@@ -1,4 +1,4 @@
-import { BadRequestException, HttpStatus, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Injectable, InternalServerErrorException, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -7,7 +7,7 @@ import { ScheduleService } from './schedule.service';
 import { UtilService } from 'src/Utils/Utils';
 import { TrainerService } from './trainer.service';
 import { CreateUser, UpdateUser } from 'src/Dtos/admin.dtos';
-import { CreateSchedule, UpdateSchedule } from 'src/Dtos/schedule.dtos';
+import { CreateSchedule, ScheduleStatus, UpdateSchedule } from 'src/Dtos/schedule.dtos';
 import { ObjectId } from 'mongodb';
 import { Schedule } from 'src/Entity/schedule.model';
 import { ExceptionHandler } from 'winston';
@@ -56,15 +56,13 @@ export class UserService {
                     isUserExist[updatedUserKeys[i]] = user[updatedUserKeys[i]];
                     break;
                 case "endDate":
-                    //    let startDate:any = this.utilService.changeDateFormat(isUserExist.startDate)
-                    //    startDate = new Date(startDate);
-                    //    startDate = this.utilService.convertToUnix(startDate);
-                    //    let endDate: any = user[updatedUserKeys[i]];
-                    //    endDate = new Date("22-08-2022");
-                    //    if(!endDate) {
-                    //      console.log("invalid date")
-                    //    }
-                    //    console.log(startDate, endDate, user[updatedUserKeys[i]]);
+                    const endDate = new Date(user[updatedUserKeys[i]]);
+                    const endDateUnix = this.utilService.convertToUnix(endDate);
+                    const startDate = new Date(isUserExist.startDate.toString())
+                    const startDateUnix = this.utilService.convertToUnix(startDate);
+                    if(startDateUnix > endDateUnix) {
+                        throw new BadRequestException(`End date should be greater than start date.`);
+                    }
                     isUserExist[updatedUserKeys[i]] = user[updatedUserKeys[i]];
                     break;
                 default:
@@ -118,32 +116,30 @@ export class UserService {
     }
 
     async createSchedule(scheduleuser: CreateSchedule, userid: ObjectId | string): Promise<Schedule> {
-        try {
-            const { scheduledate, trainerdetails } = scheduleuser;
+            const { scheduledate, scheduletime, trainerdetails } = scheduleuser;
             const todaysDate = new Date();
             const scheduleDate = new Date(scheduledate);
             const todaysUnixDate = this.utilService.convertToUnix(todaysDate);
+            console.log(todaysUnixDate, "TODAY UNIX")
             const scheduleUnixDate = this.utilService.convertToUnix(scheduleDate);
             const scheduleDateLimit = +this.configService.get("SCHEDULE_DATE_LIMIT") * 24 * 60 * 60;
             const isUserExist = await this.findUserById(userid);
+            const startDate = new Date(isUserExist.startDate.toString());
+            const startDateUnix = this.utilService.convertToUnix(startDate);
             const isScheduleExist = await this.scheduleService.findScheduleBasedOnDateAndUserId(scheduledate, userid);
-            const isTrainerExist = await this.trainerService.findTrainerBasedOnEmail(trainerdetails.email);
-            if (scheduleUnixDate - todaysUnixDate > scheduleDateLimit) {
-                throw new BadRequestException(`Schedule must be ${this.configService.get("SCHEDULE_DATE_LIMIT")} days prior to today's date.`);
-            } else if (isScheduleExist) {
-                throw new BadRequestException(`Schedule with date ${scheduledate} is already scheduled.`);
-            } else if (!isTrainerExist) {
-                throw new NotFoundException(`Trainer not found.`);
+            const trainer = await this.trainerService.findTrainerAvailableForUser(trainerdetails.email, trainerdetails.phonenumber, scheduletime, scheduledate);
+            if( scheduleUnixDate< startDateUnix){
+                throw new ServiceUnavailableException(`Schedule create will be available on ${isUserExist.startDate}`);
             }
-            else if (!isUserExist) {
-                throw new NotFoundException(`User not found.`);
+            else if (scheduleUnixDate - todaysUnixDate > scheduleDateLimit) {
+                throw new BadRequestException(`Schedule must be ${this.configService.get("SCHEDULE_DATE_LIMIT")} days prior to today's date.`);
+            } 
+            else if (isScheduleExist) {
+                throw new BadRequestException(`Schedule with date ${scheduledate} already scheduled.`);
             }
             const newSchedule = await this.scheduleService.create(scheduleuser, userid);
+            await this.trainerService.addNewScheduleToTrainer(trainer.email,newSchedule._id, newSchedule.scheduledate, newSchedule.scheduletime, newSchedule.status);
             return newSchedule;
-
-        } catch (error) {
-            throw new InternalServerErrorException(error)
-        }
     }
 
     async editSchedule(updateschedule: UpdateSchedule, scheduleId: ObjectId): Promise<Schedule> {

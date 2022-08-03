@@ -1,9 +1,10 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, ServiceUnavailableException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { InjectModel } from "@nestjs/mongoose";
 import { ObjectId } from "mongodb";
 import { Model} from "mongoose";
-import { TrainerCreate, TrainerUpdate } from "src/Dtos/trainer.dto";
+import { ScheduleStatus } from "src/Dtos/schedule.dtos";
+import { TrainerCreate, TrainerStatus, TrainerUpdate } from "src/Dtos/trainer.dto";
 import { Trainer, TrainerDocument } from "src/Entity/trainer.model";
 import { UtilService } from "src/Utils/Utils";
 
@@ -20,9 +21,14 @@ export class TrainerService{
 
 
     async create(trainer: TrainerCreate) {
-         const newTrainer = new this.trainerModel(trainer);
-         await newTrainer.save();
-         return newTrainer;
+         try{
+               const newTrainer = new this.trainerModel(trainer);
+               await newTrainer.save();
+               return newTrainer;
+         }catch(error) {
+           throw new InternalServerErrorException(error)
+         }
+
     }
 
     async deleteTrainer(trainerid: ObjectId) { 
@@ -87,5 +93,34 @@ export class TrainerService{
         trainerexist["updatedAt"] = newDate;
         await trainerexist.save();
         return trainerexist;
+    }
+
+    async findTrainerAvailableForUser(traineremail:string, trainerphonenumber:string, scheduletime: string, scheduledate:string):Promise<Trainer> {
+           const trainer = await this.trainerModel.findOne({ email: traineremail, status : TrainerStatus.ONLINE, phonenumber: trainerphonenumber});
+           if(!trainer) {
+               throw new BadRequestException(`Trainer is not available for this moment.`)
+           };
+           for(let i = 0; i < trainer.dayScheduleTimeList.length; i++) {
+                if(trainer.dayScheduleTimeList[i].scheduledate === scheduledate && trainer.dayScheduleTimeList[i].scheduletime === scheduletime && trainer.dayScheduleTimeList[i].status === ScheduleStatus.PENDING) {
+                       throw new BadRequestException(`${trainer.trainername} is already booked for this date:${scheduledate} and time:${scheduletime} `)
+                }
+           }
+           return trainer;
+    }
+
+    async addNewScheduleToTrainer(traineremail:string,scheduleid:string, scheduledate:string, scheduletime:string, status: string):Promise<void> {
+           const trainer = await this.trainerModel.findOneAndUpdate({ email: traineremail, status: TrainerStatus.ONLINE}, {
+               $push: {
+                    "dayScheduleTimeList": {
+                       scheduleid: scheduleid,
+                       scheduledate: scheduledate,
+                       scheduletime: scheduletime,
+                       status: status,  
+                    }
+               }
+           });
+           const date = new Date();
+           trainer["updatedAt"] = date;
+           await trainer.save();
     }
 }

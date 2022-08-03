@@ -12,10 +12,10 @@ export class Schedule {
   @Prop({ required : true, max: 20})
   schedulename: string;
 
-  @Prop({ required : true, unique: true})
+  @Prop({ required : true,})
   scheduledate: string;
 
-  @Prop({ required : false, unique : true})
+  @Prop({ required : false})
   scheduletime: string;
 
   @Prop({ type: Object, required : true })

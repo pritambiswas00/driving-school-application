@@ -41,7 +41,6 @@ export class AuthService {
     }
 
     async createSchedule(schedule:CreateSchedule, userid: ObjectId | string):Promise<Schedule>{
-            console.log(schedule, "SCHEDULE CREATE")
             const newSchedule = await this.userService.createSchedule(schedule, userid);
             return newSchedule;
     }

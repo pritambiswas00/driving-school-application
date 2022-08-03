@@ -41,7 +41,6 @@ export class AppController {
      @Get("/getAllAdmins")
      @UseGuards(RootGuard)
      async getAllAdmins(@IsRoot() superadmin: any){
-          console.log(superadmin);
          const admins = await this.appService.getAllAdmins();
          return admins;
      }

@@ -1,4 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { ObjectId } from 'mongodb';
 import { Document } from 'mongoose';
 import { Car } from './car.model';
 
@@ -6,8 +7,8 @@ import { Car } from './car.model';
 export type TrainerDocument = Trainer & Document;
 
 @Schema()
-export class Trainer {
-  @Prop({ type: String, required : true, unique : true})
+export class Trainer  {
+  @Prop({ type: String, required : true})
   email: string;
 
   @Prop({type: String, required : true, unique: true})
@@ -31,7 +32,16 @@ export class Trainer {
   @Prop({ required : false, default : Date.now })
   createdAt : Date
 
-  updateTrainer : Function;
+  @Prop({ required : false, default :  []})
+  dayScheduleTimeList: [
+        {
+                scheduleid: string | ObjectId,
+                status: string,
+                scheduledate: string,
+                scheduletime : string
+        }
+  ]
 }
 
 export const TrainerSchema = SchemaFactory.createForClass(Trainer);
+

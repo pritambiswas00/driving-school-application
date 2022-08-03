@@ -21,7 +21,7 @@ export class UpdateSchedule {
     scheduledate? : string;
     
     @ApiProperty({ required: false })
-    @Matches(/^[0-2][0-2]:[0-5][0-9]$/gm, {message : "Time must be HH:MM"})
+    @Matches(/^(0?[1-9]|1[0-2]):([0-5]0)\s?((?:A|P)\.?M\.?)\s?-\s?(0?[1-9]|1[0-2]):([0-5]0)\s?((?:A|P)\.?M\.?)$/ig, {message : "Time must be HH:00am/pm-HH:00am/pm (12 Hours Format)"})
     @IsString()
     @IsOptional()
     scheduletime? : string;
@@ -35,12 +35,11 @@ export class UpdateSchedule {
     @ApiProperty({
         enum: ScheduleStatus,
         isArray: true,
-        example: [ScheduleStatus.COMPLETED, ScheduleStatus.PENDING],
         required: false
     })
     @IsEnum(ScheduleStatus)
     @IsOptional()
-    public status?: ScheduleStatus[];
+    public status?: ScheduleStatus;
 }
 
 
@@ -57,7 +56,7 @@ export class CreateSchedule {
     scheduledate : string;
     
     @ApiProperty({ required: true })
-    @Matches(/^[0-1][0-2]:[0-5][0-9]$/gm, {message : "Time must be HH:MM (12 Hours)"})
+    @Matches(/^(0?[1-9]|1[0-2]):([0-5]0)\s?((?:A|P)\.?M\.?)\s?-\s?(0?[1-9]|1[0-2]):([0-5]0)\s?((?:A|P)\.?M\.?)$/i, {message : "Time must be HH:00am/pm-HH:00am/pm (12 Hours Format)"})
     @IsString()
     @IsNotEmpty()
     scheduletime : string;

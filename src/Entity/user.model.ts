@@ -8,7 +8,7 @@ export class User {
   @Prop({ required : true, unique : true, max : 14})
   billnumber : String;
 
-  @Prop({ required : true})
+  @Prop({ required : true, unique : true})
   email: String;
 
   @Prop({ required : true, unique : true })
@@ -34,9 +34,6 @@ export class User {
 
   @Prop({ required: false, default : Date.now })
   updatedAt : Date
-
-  @Prop({required: false, default: [] })
-  schedules: { schedulename: String, scheduledate: String, trainerdetails: { email: String, phonenumber: String, trainername: String,  cardetails: { model : String, make : String, vin : String }} }[];
 
   @Prop({ required: true, maxlength: 20, trim: true})
   allowschedule: String

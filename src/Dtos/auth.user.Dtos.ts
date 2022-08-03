@@ -12,7 +12,7 @@ export class LoginUser {
     
 
     @ApiProperty({ required : true })
-    @Matches(/^[6-9]\d{9}$/gi, { message:"Phone number must be 10 digits." })
+    @Matches(/^[6-9]\d{9}$/i, { message:"Phone number must be 10 digits." })
     @IsString()
     @IsNotEmpty()
     phonenumber: string;

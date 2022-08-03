@@ -10,7 +10,7 @@ export class AddAdmin {
     public email: string;
 
     @ApiProperty({ required : true })
-    @Matches(/^[6-9]\d{9}$/gi, { message:"Phone number must be 10 digits." })
+    @Matches(/^[6-9]\d{9}$/i, { message:"Phone number must be 10 digits." })
     @IsString()
     @IsNotEmpty()
     public phonenumber: string;
@@ -50,7 +50,7 @@ export class CreateUser {
     public email : string;
     
     @ApiProperty({ required : true })
-    @Matches(/^[6-9]\d{9}$/gi, { message:"Phone number must be 10 digits."})
+    @Matches(/^[6-9]\d{9}$/i, { message:"Phone number must be 10 digits."})
     @IsString()
     @IsNotEmpty()
     public phonenumber : string;
@@ -120,6 +120,7 @@ export class TrainerStatus{
     @IsBoolean()
     @IsNotEmpty()
     public status: boolean
+     static ONLINE: any;
 }
 
 export class AdminPayload {
