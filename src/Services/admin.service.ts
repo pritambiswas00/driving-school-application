@@ -114,9 +114,12 @@ export class AdminService {
           return updatedSchedule;
      }
 
-     async getSchedules(userId: ObjectId, queryStatus: string | undefined): Promise<Schedule[]> {
-          const scheduleList = await this.userService.getAllSchedules(userId, queryStatus);
-          return scheduleList;
+     async getSchedules(userId: ObjectId| undefined, queryStatus: string | undefined): Promise<Schedule[]> {
+          const schedules = await this.userService.getSchedulesForAdmin(userId, queryStatus)
+          if(!schedules) {
+                throw new BadRequestException("No Schedules found.");
+          }
+          return schedules;
      }
 
      async addTrainer(newtrainer: TrainerCreate): Promise<Trainer> {

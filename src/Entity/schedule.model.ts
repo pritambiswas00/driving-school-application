@@ -52,7 +52,7 @@ export class Schedule {
   @Prop({ required : false, default : Date.now })
   updatedAt : Date
 
-  @Prop({ type: String, required : false, default : "PENDING"})
+  @Prop({ type: String, required : false, default : "PENDING", enum:["PENDING", "COMPLETED", "CANCELED"]})
   status : string
 }
 

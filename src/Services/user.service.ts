@@ -184,11 +184,16 @@ export class UserService {
         return isSchduleExist;
     }
 
-    async getAllSchedules(userid: ObjectId | string | undefined, queryStatus: string | undefined): Promise<Schedule[]> {
+    async getAllSchedules(userid: ObjectId | string, queryStatus: string | undefined): Promise<Schedule[]> {
         const allSchedules = await this.scheduleService.getAllSchdulesByUserid(userid, queryStatus);
         if (!allSchedules) throw new NotFoundException(`Schedule not found.`);
-        if (allSchedules.length === 0) throw new NotFoundException(`Schedule not found for the user.`);
+        if (allSchedules.length === 0) throw new NotFoundException(`Schedule not found.`);
         return allSchedules;
+    }
+
+    async getSchedulesForAdmin(userid: ObjectId | undefined, queryStatus: string | undefined): Promise<Schedule[]> {
+             const allSchedules = await this.scheduleService.getAllSchdulesForAdmin(userid, queryStatus);
+             return allSchedules;
     }
 
     async getAllTrainers(status: string | undefined): Promise<Trainer[]> {

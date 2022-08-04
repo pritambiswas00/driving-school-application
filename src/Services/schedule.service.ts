@@ -51,14 +51,36 @@ export class ScheduleService{
 
      async getAllSchdulesByUserid(userid: ObjectId|string, queryStatus:string|undefined):Promise<Schedule[]>{
           let allSchedules:Schedule[];
+          console.log(userid, queryStatus);
           if(queryStatus) {
                allSchedules = await this.scheduleModel.find({
                     userid: userid,
                     status:queryStatus.toUpperCase()
               });
+          }else{
+               allSchedules = await this.scheduleModel.find({ userid: userid });
           }
-          allSchedules = await this.scheduleModel.find({ userid: userid });
           return allSchedules;
+     }
+
+     async getAllSchdulesForAdmin(userId: ObjectId| undefined, queryStatus: string | undefined) :Promise<Schedule[]>{
+               let allSchedules:Schedule[];
+
+               if(userId && queryStatus) {
+                   allSchedules = await this.scheduleModel.find({
+                      userid: { $eq : userId },
+                      status : { $eq : queryStatus.toUpperCase()}
+                   })
+               }else if(userId && !queryStatus) {
+                    allSchedules = await this.scheduleModel.find({userid: { $eq : userId}});
+               }else if(!userId && queryStatus) {
+                    allSchedules = await this.scheduleModel.find({
+                         status : { $eq : queryStatus.toUpperCase() }
+                    })
+               }else {
+                    allSchedules = await this.scheduleModel.find();
+               }
+               return allSchedules;
      }
 }
 
