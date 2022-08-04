@@ -5,6 +5,7 @@ import { ObjectId } from 'mongodb';
 import { LoginUser, UserPayload } from 'src/Dtos/auth.user.Dtos';
 import { CreateSchedule, UpdateSchedule } from 'src/Dtos/schedule.dtos';
 import { Schedule } from 'src/Entity/schedule.model';
+import { Trainer } from 'src/Entity/trainer.model';
 import { UtilService } from 'src/Utils/Utils';
 import { AdminService } from './admin.service';
 import { UserService }  from "./user.service";
@@ -60,7 +61,9 @@ export class AuthService {
         return allSchedules;
     }
 
-    // getAllTrainers() {
-    //     return this.userService.getAllTrainers();
-    // }
+    async getAllTrainers(status: string | undefined):Promise<Trainer[]> {
+              const allTrainers = await this.userService.getAllTrainers(status);
+              return allTrainers;
+    }
+     
 }

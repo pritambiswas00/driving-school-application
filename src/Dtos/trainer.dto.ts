@@ -1,4 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiQuery } from "@nestjs/swagger";
 import { IsString, IsNotEmpty, IsObject, IsOptional, IsPhoneNumber, IsEmail, Matches, MaxLength, IsEnum } from "class-validator";
 
 export class Car {

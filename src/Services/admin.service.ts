@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model} from 'mongoose';
 import { Admin, AdminDocument } from 'src/Entity/admin.model';
 import { UserService } from './user.service';
-import { CreateUser, Login, TrainerStatus, UpdateUser } from 'src/Dtos/admin.dtos';
+import { CreateUser, Login, UpdateUser } from 'src/Dtos/admin.dtos';
 import { scrypt as _scrypt } from "crypto";
 import { UtilService } from 'src/Utils/Utils';
 import { TrainerService } from './trainer.service';

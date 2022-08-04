@@ -19,27 +19,18 @@ export class ScheduleService{
              return newSchedule;
      }
 
-     async findSchedule(date?:string, scheduleid?: ObjectId, userid?: ObjectId){
-        const schedule = await this.scheduleModel.findOne({date:date, _id: scheduleid, userid: userid });
-        if(!schedule) return null;
-          return schedule;
-     }
-
      async findScheduleBasedOnDateAndUserId(date: string, userid: ObjectId | string){
-          const schedule = await this.scheduleModel.findOne({date:date, userid: userid });
-          if(!schedule) return null;
-            return schedule;
+          const schedule = await this.scheduleModel.findOne({scheduledate: { $eq: date }, userid: { $eq : userid }});
+          return schedule;
      }
 
      async findScheduleBasedOnId(scheduleid: ObjectId) {
          const schedule = await this.scheduleModel.findOne({ _id: scheduleid });
-         if(!schedule) return null;
          return schedule;
      }
 
      async findScheduleBasedOnScheduleIdAndUserId(scheduleid:ObjectId , userid : ObjectId) {
-          const schedule = await this.scheduleModel.findOne({_id: scheduleid, userid: userid});
-          if(!schedule) return null;
+          const schedule = await this.scheduleModel.findOne({_id: {$eq : scheduleid}, userid: { $eq :  userid}});
           return schedule;
      }
 

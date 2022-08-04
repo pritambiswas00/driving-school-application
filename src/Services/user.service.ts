@@ -120,7 +120,6 @@ export class UserService {
             const todaysDate = new Date();
             const scheduleDate = new Date(scheduledate);
             const todaysUnixDate = this.utilService.convertToUnix(todaysDate);
-            console.log(todaysUnixDate, "TODAY UNIX")
             const scheduleUnixDate = this.utilService.convertToUnix(scheduleDate);
             const scheduleDateLimit = +this.configService.get("SCHEDULE_DATE_LIMIT") * 24 * 60 * 60;
             const isUserExist = await this.findUserById(userid);
@@ -135,7 +134,7 @@ export class UserService {
                 throw new BadRequestException(`Schedule must be ${this.configService.get("SCHEDULE_DATE_LIMIT")} days prior to today's date.`);
             } 
             else if (isScheduleExist) {
-                throw new BadRequestException(`Schedule with date ${scheduledate} already scheduled.`);
+                throw new BadRequestException(`Schedule with date ${isScheduleExist.scheduledate} already scheduled.`);
             }
             const newSchedule = await this.scheduleService.create(scheduleuser, userid);
             await this.trainerService.addNewScheduleToTrainer(trainer.email,newSchedule._id, newSchedule.scheduledate, newSchedule.scheduletime, newSchedule.status);
@@ -186,7 +185,8 @@ export class UserService {
     }
 
     async getAllTrainers(status: string | undefined): Promise<Trainer[]> {
-        return this.trainerService.getAllTrainer(status);
+        const trainers = await this.trainerService.getAllTrainer(status);
+        return trainers;
     }
 
     async deleteAllTokens(): Promise<string> {

@@ -45,8 +45,7 @@ export class TrainerService{
           trainers = await this.trainerModel.find({ status: status.toUpperCase() });
           return trainers;
         }
-        trainers = await this.trainerModel.find();
-        if(!trainers) return null;
+        trainers = await this.trainerModel.find({});
         return trainers;
     }
     

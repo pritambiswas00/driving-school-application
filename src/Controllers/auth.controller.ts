@@ -1,4 +1,4 @@
-import { Controller, Inject, Get, Logger, Post, Body, Param, Patch, Delete, Session, UseInterceptors, UseGuards, HttpStatus, Headers, Query } from '@nestjs/common';
+import { Controller, Inject, Get, Logger, Post, Body, Param, Patch, Delete, Session, UseInterceptors, UseGuards, HttpStatus, Headers, Query, BadRequestException } from '@nestjs/common';
 import { AuthService } from "../Services/auth.service";
 import { LoginUser, UserPayload } from '../Dtos/auth.user.Dtos';
 import { ConfigService } from '@nestjs/config';
@@ -12,8 +12,7 @@ import { IsUserInterceptor } from 'src/Interceptors/isUser.interceptor';
 import { UserGuard } from 'src/Guards/isUser.guard';
 import { CreateSchedule, UpdateSchedule } from 'src/Dtos/schedule.dtos';
 import { ObjectId } from 'mongodb';
-import { Login } from 'src/Dtos/admin.dtos';
-import { User } from 'src/Entity/user.model';
+import { TrainerStatus } from 'src/Dtos/trainer.dto';
 
 
 @ApiTags("User")
@@ -24,7 +23,7 @@ export class AuthController {
    private readonly authService: AuthService, private readonly config: ConfigService
   ){}
   //////////////Login User///////////////////////
-  @ApiOperation({ summary: 'Login User *' })
+  @ApiOperation({ summary: 'Login User ****' })
   @ApiResponse({ status: 200, description: 'User Logged in' })
   @ApiResponse({ status: 403, description: 'Forbidden. Not Authenticated.' })
   @Post("/login")
@@ -39,7 +38,7 @@ export class AuthController {
 
 
   /////////////Logout User///////////////
-  @ApiOperation({ summary: 'Logout User *' })
+  @ApiOperation({ summary: 'Logout User ****' })
   @Post("/logout")
   @UseGuards(UserGuard)
   async logout (@Headers("Authorization") authToken:string, @IsUser() userPayload: UserPayload ) {
@@ -52,7 +51,7 @@ export class AuthController {
   }
 
   ///////////User Schedule Create///////////////
-  @ApiOperation({ summary: 'Create Schedule *' })
+  @ApiOperation({ summary: 'Create Schedule ****' })
   @Post("/user/schedule/create")
   @UseGuards(UserGuard)
   async createSchedule(@Body() body: CreateSchedule, @IsUser() user: any) {
@@ -63,7 +62,7 @@ export class AuthController {
         }
   }
 
-  @ApiOperation({ summary: 'Get Schedules *' })
+  @ApiOperation({ summary: 'Get Schedules ****' })
   @Get("/user/schedule")
   @UseGuards(UserGuard)
   async getSchedule(@IsUser() user: any, @Query("status") status : string | undefined) {
@@ -74,18 +73,32 @@ export class AuthController {
        }
   }
 
-  @ApiOperation({ summary: 'Edit Schedule *' })
+  @ApiOperation({ summary: 'Edit Schedule ****' })
   @Patch("/user/schedule/edit/:scheduleId")
   @UseGuards(UserGuard)
   async editSchedule(@Body() body:UpdateSchedule, @Param("scheduleId") scheduleId: ObjectId, @IsUser() user: any) {
         return this.authService.updateSchedule(body, scheduleId);
   }
 
-  @ApiOperation({ summary: 'Delete Schedule *' })
+  @ApiOperation({ summary: 'Delete Schedule ****' })
   @Delete("/user/schedule/delete/:scheduleId")
   @UseGuards(UserGuard)
   async deleteSchedule(@Param("scheduleId") scheduleId: ObjectId, @IsUser() user: any) {
        return this.authService.deleteSchedule(scheduleId);
+  }
+
+  @ApiOperation({ summary: 'Get All Trainer ****' })
+  @Get("/user/getAllTrainers")
+  @UseGuards(UserGuard)
+  async getTrainers(@Query("status") status : TrainerStatus, @IsUser() user: any) {
+      const trainers = await this.authService.getAllTrainers(status);
+      if(!trainers) {
+          throw new BadRequestException("No trainers found.");
+      }
+      return {
+         status : HttpStatus.OK,
+         trainers : trainers
+      }
   }
 
 }

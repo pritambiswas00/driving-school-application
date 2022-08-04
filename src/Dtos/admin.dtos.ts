@@ -109,20 +109,6 @@ export class UpdateUser {
     public allowschedule?: string;
 }
 
-
-export class TrainerStatus{
-    @ApiProperty({ required : true, type: ObjectId })
-    @IsMongoId()
-    @IsNotEmpty()
-    public trainerid: ObjectId
-
-    @ApiProperty({ required : true, type: Boolean })
-    @IsBoolean()
-    @IsNotEmpty()
-    public status: boolean
-     static ONLINE: any;
-}
-
 export class AdminPayload {
       @IsMongoId()
       @IsNotEmpty()
