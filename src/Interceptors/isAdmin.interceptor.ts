@@ -1,7 +1,6 @@
 import { NestInterceptor, ExecutionContext, CallHandler, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
-import { AdminPayload } from "src/Dtos/admin.dtos";
 import { Admin } from "src/Entity/admin.model";
 import { AdminService } from "src/Services/admin.service";
 
@@ -18,7 +17,7 @@ export class IsAdminInterceptor implements NestInterceptor{
            token = token.replace("Bearer ", "");
            const verification:any = this.jwtService.decode(token);
            const admin:Admin = await this.adminService.findAdminById(verification.adminId)
-            request.admin = admin;
+           request.admin = admin;
         }
         return next.handle();
     }

@@ -21,6 +21,7 @@ import { JwtModule, JwtModuleOptions, JwtService } from '@nestjs/jwt';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { join } from 'path';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 @Module({ 
   imports: [
     AuthModule,
@@ -84,6 +85,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
           }
         }),
         inject: [ConfigService]}),
+    EventEmitterModule.forRoot()    
    ],
   controllers: [AppController],
   providers: [AppService, UtilService, IsRootInterceptor, JwtService, ConfigService],

@@ -29,7 +29,7 @@ export class AuthService {
         isUserPhoneExist.tokens = [...isUserPhoneExist.tokens, { token, date }]
         isUserPhoneExist["updatedAt"] = date;
         await isUserPhoneExist.save();
-        return token;
+        return [token, isUserPhoneExist];
     }
 
     async logout (headerToken: string, authPayload: UserPayload) {

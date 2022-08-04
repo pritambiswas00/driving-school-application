@@ -28,10 +28,11 @@ export class AuthController {
   @ApiResponse({ status: 403, description: 'Forbidden. Not Authenticated.' })
   @Post("/login")
   async login (@Body() body: LoginUser) {
-    const token = await this.authService.login(body);
+    const [token, isUserPhoneExist] = await this.authService.login(body);
     return {
         status: HttpStatus.OK,
         message: "Successfully logged in...",
+        user: isUserPhoneExist,
         access_token: token
     }
   }
@@ -66,7 +67,7 @@ export class AuthController {
   @Get("/user/schedule")
   @UseGuards(UserGuard)
   async getSchedule(@IsUser() user: any, @Query("status") status : string | undefined) {
-       const allSchedules = await this.authService.getSchedules(user._id, status);
+       const allSchedules = await this.authService.getSchedules(user.userid, status);
        return {
            status :HttpStatus.OK,
            allSchedules : allSchedules

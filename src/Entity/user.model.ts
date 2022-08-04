@@ -17,7 +17,7 @@ export class User {
   @Prop({ required : true, max: 20 })
   name : String;
 
-  @Prop({ required : true })
+  @Prop({ required : true,  })
   startDate : String;
 
   @Prop({ required : false, default : "" })

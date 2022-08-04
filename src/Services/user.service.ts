@@ -13,31 +13,38 @@ import { Schedule } from 'src/Entity/schedule.model';
 import { ExceptionHandler } from 'winston';
 import { Trainer } from 'src/Entity/trainer.model';
 import { MailerService } from '@nestjs-modules/mailer';
+import { EventEmitter } from 'stream';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { UserCreatedEvent } from 'src/Events/User.events';
 
 @Injectable()
 export class UserService {
-    constructor(@InjectModel(User.name) private readonly userModel: Model<UserDocument>, private readonly scheduleService: ScheduleService, private readonly configService: ConfigService, private readonly utilService: UtilService, private readonly trainerService: TrainerService, private readonly mailerService:MailerService) { }
+    constructor(@InjectModel(User.name) private readonly userModel: Model<UserDocument>, private readonly scheduleService: ScheduleService, private readonly configService: ConfigService, private readonly utilService: UtilService, private readonly trainerService: TrainerService, private readonly mailerService:MailerService, private readonly eventEmitter:EventEmitter2) { }
 
     async create(user: CreateUser) {
         try {
-
             const newUser = new this.userModel(user);
             await newUser.save();
-            await this.mailerService.sendMail({
-                to: newUser.email.toString(),
-                subject: 'Greeting from Driving School',
-                template: './email.hbs',
-                context: {
-                    SMTP_USERNAME: this.configService.get<string>('SMTP_USERNAME')
-                }
-            });
+            this.eventEmitter.emit("NEW_USER_CREATED", new UserCreatedEvent(newUser, newUser._id));
             return newUser;
         } catch (error) {
             throw new InternalServerErrorException(error);
         }
-
     }
 
+    ////Sending Email when the user is created////
+    @OnEvent("NEW_USER_CREATED")
+    async welcomeNewUser(payload:UserCreatedEvent) {
+        await this.mailerService.sendMail({
+            to: payload.user.email.toString(),
+            subject: 'Greeting from Driving School',
+            template: './email.hbs',
+            context: {
+                SMTP_USERNAME: this.configService.get<string>('SMTP_USERNAME')
+            }
+        });
+    }
+    ////////////////////////////////////////////////
     findAllUsers() {
         return this.userModel.find({});
     }
@@ -136,7 +143,7 @@ export class UserService {
             else if (isScheduleExist) {
                 throw new BadRequestException(`Schedule with date ${isScheduleExist.scheduledate} already scheduled.`);
             }
-            const newSchedule = await this.scheduleService.create(scheduleuser, userid);
+            const newSchedule = await this.scheduleService.create(scheduleuser, isUserExist.name, isUserExist.startDate, isUserExist.endDate, isUserExist.phonenumber, isUserExist._id);
             await this.trainerService.addNewScheduleToTrainer(trainer.email,newSchedule._id, newSchedule.scheduledate, newSchedule.scheduletime, newSchedule.status);
             return newSchedule;
     }
@@ -200,4 +207,8 @@ export class UserService {
 
 
 
+}
+
+function welcomeNewUser() {
+    throw new Error('Function not implemented.');
 }

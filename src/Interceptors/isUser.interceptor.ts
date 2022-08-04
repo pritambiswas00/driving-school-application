@@ -15,7 +15,7 @@ export class IsUserInterceptor implements NestInterceptor{
            token = token.replace("Bearer ", "");
            const verification:any = this.jwtService.decode(token);
            const user = await this.userService.findUserById(verification.userId);
-           request.user = user;
+           request.user = {...user, userid: verification.userId}
         }
         return next.handle();
     }

@@ -43,6 +43,9 @@ export class Schedule {
   @Prop({ required: true, type : ObjectId })
   userid : ObjectId
 
+  @Prop({ required: true, type: { name: String, phonenumber: String, startDate: String, endDate: String }})
+  user: { name: string, phonenumber:string, startDate: string, endDate: string}
+
   @Prop({ required : false, default : Date.now })
   createdAt : Date
 

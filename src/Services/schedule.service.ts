@@ -4,16 +4,23 @@ import { ObjectId } from "mongodb";
 import { Model } from "mongoose";
 import { CreateSchedule } from "src/Dtos/schedule.dtos";
 import { Schedule, ScheduleDocument } from 'src/Entity/schedule.model';
+import { User } from "src/Entity/user.model";
 
 @Injectable()
 export class ScheduleService{
      constructor(@InjectModel(Schedule.name) private readonly scheduleModel: Model<ScheduleDocument>){}
 
 
-     async create(schedule: CreateSchedule, id: ObjectId | string) {
+     async create(schedule: CreateSchedule, name: String, startDate:String, endDate: String, phonenumber: String, userid: ObjectId) {
              const newSchedule = new this.scheduleModel({
                  ...schedule,
-                 userid: id
+                 userid: userid,
+                 user: {
+                    name: name,
+                    phonenumber: phonenumber,
+                    startDate: startDate,
+                    endDate: endDate
+                 }
              });
              await newSchedule.save();
              return newSchedule;
@@ -39,28 +46,19 @@ export class ScheduleService{
          const isSchduleExist = await this.scheduleModel.findOneAndDelete({
           _id: id
          });
-         if(!isSchduleExist) return null;
          return isSchduleExist;
      }
 
-     async getAllSchdulesByUserid(userid: ObjectId|string|undefined, queryStatus:string|undefined):Promise<Schedule[]>{
+     async getAllSchdulesByUserid(userid: ObjectId|string, queryStatus:string|undefined):Promise<Schedule[]>{
           let allSchedules:Schedule[];
-          if(queryStatus && userid){
+          if(queryStatus) {
                allSchedules = await this.scheduleModel.find({
                     userid: userid,
                     status:queryStatus.toUpperCase()
               });
-              return allSchedules;
-          }else if(!queryStatus && userid){
-                allSchedules = await this.scheduleModel.find({ userid: userid });
-                return allSchedules;
-          }else if(queryStatus && !userid){
-                allSchedules = await this.scheduleModel.find({ status:queryStatus.toUpperCase() });
-                return allSchedules;
-          }else{
-                    allSchedules = await this.scheduleModel.find();
-                    return allSchedules;
           }
+          allSchedules = await this.scheduleModel.find({ userid: userid });
+          return allSchedules;
      }
 }
 
