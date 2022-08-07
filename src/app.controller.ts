@@ -8,6 +8,7 @@ import { IsRootInterceptor } from "./Interceptors/isRoot.interceptor";
 import { IsRoot } from "./Decorators/isRoot.decorators";
 import { Logger } from "winston";
 import { threadId } from "worker_threads";
+import { blockParams } from "handlebars";
 
 
 
@@ -56,6 +57,10 @@ export class AppController {
      @Delete("/deleteAdmin/:adminId")
      @UseGuards(RootGuard)
      async removeAdmin(@Param("adminId") param : ObjectId){
-          return this.appService.deleteAdmin(param);
+          const deletedAdmin = await this.appService.deleteAdmin(param);
+          return {
+               status: HttpStatus.OK,
+               message: `Successfully deleted admin ${deletedAdmin.email}`,
+          }
      }
 }

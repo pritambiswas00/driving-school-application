@@ -4,7 +4,8 @@ import { TrainerCreate, TrainerUpdate } from "./trainer.dto";
 
 export enum ScheduleStatus {
     COMPLETED = "COMPLETED",
-    PENDING = "PENDING"
+    PENDING = "PENDING",
+    CANCELLED = "CANCELLED"
 }
 export class UpdateSchedule {
 
@@ -66,4 +67,15 @@ export class CreateSchedule {
     @IsObject()
     @IsNotEmpty()
     trainerdetails: TrainerCreate
+}
+
+export class ScheduleStatusChange {
+    @ApiProperty({
+        enum: ["COMPLETED", "CANCELLED"],
+        isArray: true,
+        required: true
+    })
+    @IsEnum(["COMPLETED", "CANCELLED"])
+    @IsNotEmpty()
+    public status: ["COMPLETED", "CANCELLED"];
 }

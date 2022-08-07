@@ -1,11 +1,15 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { ObjectId } from 'mongodb';
+import { Document, Types } from 'mongoose';
 
 
 export type CarDocument = Car & Document;
 
 @Schema()
 export class Car {
+  @Prop({ type: ObjectId})
+  public _id: ObjectId
+
   @Prop({ type: String, required : true, max: 20, unique: true})
   public vin: string;
 
@@ -23,3 +27,10 @@ export class Car {
 }
 
 export const CarSchema = SchemaFactory.createForClass(Car);
+CarSchema.pre('save', function(next) {
+  const car = this;
+  if(!car._id){
+    car._id = new Types.ObjectId();
+  }
+  next();
+})

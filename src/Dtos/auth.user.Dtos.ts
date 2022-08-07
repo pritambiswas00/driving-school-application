@@ -1,5 +1,7 @@
 import { IsEmail, IsString, IsNotEmpty, IsObject, IsMongoId, Matches, IsNumber } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
+import { ObjectId } from "mongoose";
+
 
 
 export class LoginUser {
@@ -23,7 +25,7 @@ export class UserPayload {
       
     @IsMongoId()
     @IsNotEmpty()
-    userId:string;
+    userId: ObjectId;
 
     @IsEmail()
     @IsString()

@@ -18,5 +18,6 @@ export const configValidation = Joi.object({
     SMTP_HOST: Joi.string().default("smtp.gmail.com"),
     SMTP_PORT: Joi.number().default(465),
     SMTP_USERNAME: Joi.string().default(""),
-    SMTP_PASSWORD: Joi.string().default("")
+    SMTP_PASSWORD: Joi.string().default(""),
+    MAX_ADMIN_COUNT: Joi.number().default(5),
 })

@@ -111,12 +111,11 @@ export class AdminController {
     @Patch("/editTrainer/:trainerId")
     @UseGuards(AdminGuard)
     async editTrainer (@Param("trainerId") trainerId : ObjectId,@Body() body: TrainerUpdate, @IsAdmin() admin : Admin) {
-        const updatedTrainer = await this.adminService.editTrainer(body, trainerId);
+        await this.adminService.editTrainer(body, trainerId);
         return { 
              status : HttpStatus.OK,
-             message : `Trainer ${updatedTrainer.trainername} updated successfully`,
+             message : `Trainer updated successfully.`,
           }
-
     }
 
     @ApiOperation({ summary: 'Delete Trainer ****' })
@@ -149,7 +148,7 @@ export class AdminController {
           const schedule = await this.adminService.createSchedule(body, userId);
           return {
                  status: HttpStatus.OK,
-                 message : `Schedule ${schedule.userid} created successfully`,
+                 message : `Schedule ${schedule.schedulename} created successfully`,
           }
     }
 
@@ -160,7 +159,7 @@ export class AdminController {
           const updatedSchedule = await this.adminService.editSchedule(body, scheduleId);
           return {
                 status: HttpStatus.OK,
-                message : `Schedule ${updatedSchedule.userid} updated successfully`,
+                message : `Schedule updated successfully`,
           }
     }
 

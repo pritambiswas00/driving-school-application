@@ -10,7 +10,7 @@ import {
 import { IsUser } from 'src/Decorators/isUser.decorator';
 import { IsUserInterceptor } from 'src/Interceptors/isUser.interceptor';
 import { UserGuard } from 'src/Guards/isUser.guard';
-import { CreateSchedule, UpdateSchedule } from 'src/Dtos/schedule.dtos';
+import { CreateSchedule, ScheduleStatus, ScheduleStatusChange, UpdateSchedule } from 'src/Dtos/schedule.dtos';
 import { ObjectId } from 'mongodb';
 import { TrainerStatus } from 'src/Dtos/trainer.dto';
 
@@ -42,9 +42,9 @@ export class AuthController {
   @ApiOperation({ summary: 'Logout User ****' })
   @Post("/logout")
   @UseGuards(UserGuard)
-  async logout (@Headers("Authorization") authToken:string, @IsUser() userPayload: UserPayload ) {
+  async logout (@Headers("Authorization") authToken:string, @IsUser() user: any ) {
           const token = authToken.replace("Bearer ", "");
-          const logoutUser:string= await this.authService.logout(token, userPayload);
+          const logoutUser:string= await this.authService.logout(token, user._id);
           return {
               status :HttpStatus.OK,
               message : logoutUser
@@ -67,7 +67,7 @@ export class AuthController {
   @Get("/user/schedule")
   @UseGuards(UserGuard)
   async getSchedule(@IsUser() user: any, @Query("status") status : string | undefined) {
-       const allSchedules = await this.authService.getSchedules(user.userid, status);
+       const allSchedules = await this.authService.getSchedules(user._id, status);
        return {
            status :HttpStatus.OK,
            allSchedules : allSchedules
@@ -78,7 +78,11 @@ export class AuthController {
   @Patch("/user/schedule/edit/:scheduleId")
   @UseGuards(UserGuard)
   async editSchedule(@Body() body:UpdateSchedule, @Param("scheduleId") scheduleId: ObjectId, @IsUser() user: any) {
-        return this.authService.updateSchedule(body, scheduleId);
+        const updatedSchedule = await this.authService.updateSchedule(body, scheduleId, user._id);
+        return {
+             status : HttpStatus.OK,
+             message: `${updatedSchedule.schedulename} has successfully updated.`
+        }
   }
 
   @ApiOperation({ summary: 'Delete Schedule ****' })
@@ -101,5 +105,16 @@ export class AuthController {
          trainers : trainers
       }
   }
+
+//   @ApiOperation({ summary: 'Change Schedule Status ****' })
+//   @Post("/user/schedule/:scheduleId")
+//   @UseGuards(UserGuard)
+//   async changeScheduleStatus(@IsUser() user: any, @Body() body: ScheduleStatusChange, @Param("scheduleId") scheduleId: ObjectId) {
+//       const schedule = await this.authService.changeUserScheduleStatus(scheduleId, body, user._id);
+//       return {
+//          status: HttpStatus.OK,
+//          message: `${schedule.schedulename} has successfully updated.`
+//       }
+//   }
 
 }

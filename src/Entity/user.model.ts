@@ -1,47 +1,58 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { ObjectId } from 'mongodb';
+import { Document, Types } from 'mongoose';
 
 export type UserDocument = User & Document;
 
 @Schema()
 export class User {
-  @Prop({ required : true, unique : true, max : 14})
-  billnumber : String;
+  @Prop({ type: ObjectId})
+  public _id: ObjectId
 
-  @Prop({ required : true, unique : true})
-  email: String;
+  @Prop({ required : true, unique : true, max : 14, type:String})
+  public billnumber : string;
 
-  @Prop({ required : true, unique : true })
-  phonenumber: String;
+  @Prop({ required : true, unique : true, type:String})
+  public email: string;
 
-  @Prop({ required : true, max: 20 })
-  name : String;
+  @Prop({ required : true, unique : true, type:String })
+  public phonenumber: string;
 
-  @Prop({ required : true,  })
-  startDate : String;
+  @Prop({ required : true, max: 20, type:String })
+  public name : string;
 
-  @Prop({ required : false, default : "" })
-  endDate : String;
+  @Prop({ required : true, type:String })
+  public startDate : string;
 
-  @Prop({ required : false, default : false })
-  isVerified: Boolean;
+  @Prop({ required : false, default : "" ,type:String})
+  public endDate : string;
 
-  @Prop({ required : false, default : "1234" })
-  otp : String;
+  @Prop({ required : false, default : false, type:Boolean })
+  public isVerified: boolean;
+
+  @Prop({ required : false, default : "1234", type:String })
+  public otp : string;
 
   @Prop({ required : false, default : Date.now })
-  createdAt : Date
+  public createdAt : Date
 
   @Prop({ required: false, default : Date.now })
-  updatedAt : Date
+  public updatedAt : Date
 
-  @Prop({ required: true, maxlength: 20, trim: true})
-  allowschedule: String
+  @Prop({ required: true, maxlength: 20, trim: true, type:String})
+  public allowschedule: string
 
   @Prop({ required : false, default: []})
-  tokens : { token : String,
+  public tokens : { token : string,
              date : Date
            }[]
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+UserSchema.pre('save', function(next) {
+  const user = this;
+  if(!user._id){
+    user._id = new Types.ObjectId();
+  }
+  next();
+})

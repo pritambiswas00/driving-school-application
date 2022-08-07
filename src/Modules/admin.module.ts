@@ -18,6 +18,7 @@ import { TrainerService } from 'src/Services/trainer.service';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { join } from 'path';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [MongooseModule.forFeature([{name : Admin.name, schema : AdminSchema}, {name : User.name, schema : UserSchema}, {name : Schedule.name, schema : ScheduleSchema}, {name : Trainer.name, schema : TrainerSchema}]),
@@ -37,7 +38,6 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
           return options;
     })
 }),
-  
 ],
   controllers: [AdminController],
   providers: [AdminService, UserService, UtilService, IsAdminInterceptor, ScheduleService, ConfigService, JwtService, TrainerService],

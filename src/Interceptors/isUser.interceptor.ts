@@ -1,5 +1,6 @@
 import { NestInterceptor, ExecutionContext, CallHandler, Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
+import { User } from "src/Entity/user.model";
 import { UserService } from "src/Services/user.service";
 
 
@@ -14,8 +15,8 @@ export class IsUserInterceptor implements NestInterceptor{
         if(token) {
            token = token.replace("Bearer ", "");
            const verification:any = this.jwtService.decode(token);
-           const user = await this.userService.findUserById(verification.userId);
-           request.user = {...user, userid: verification.userId}
+           const user:User = await this.userService.findUserById(verification.userId);
+           request.user = user
         }
         return next.handle();
     }

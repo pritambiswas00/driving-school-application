@@ -1,21 +1,19 @@
 import { BadRequestException, HttpStatus, Injectable, InternalServerErrorException, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { User, UserDocument } from '../Entity/user.model';
 import { ScheduleService } from './schedule.service';
 import { UtilService } from 'src/Utils/Utils';
 import { TrainerService } from './trainer.service';
 import { CreateUser, UpdateUser } from 'src/Dtos/admin.dtos';
-import { CreateSchedule, ScheduleStatus, UpdateSchedule } from 'src/Dtos/schedule.dtos';
+import { CreateSchedule, ScheduleStatus, ScheduleStatusChange, UpdateSchedule } from 'src/Dtos/schedule.dtos';
 import { ObjectId } from 'mongodb';
 import { Schedule } from 'src/Entity/schedule.model';
-import { ExceptionHandler } from 'winston';
 import { Trainer } from 'src/Entity/trainer.model';
 import { MailerService } from '@nestjs-modules/mailer';
-import { EventEmitter } from 'stream';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { UserCreatedEvent } from 'src/Events/User.events';
+import { UserEventTypes } from 'src/Events/Emit/User.emit';
 
 @Injectable()
 export class UserService {
@@ -25,32 +23,25 @@ export class UserService {
         try {
             const newUser = new this.userModel(user);
             await newUser.save();
-            this.eventEmitter.emit("NEW_USER_CREATED", new UserCreatedEvent(newUser, newUser._id));
+            await this.eventEmitter.emitAsync(UserEventTypes.NEW_USER_CREATED, newUser);
             return newUser;
         } catch (error) {
             throw new InternalServerErrorException(error);
         }
     }
 
-    ////Sending Email when the user is created////
-    @OnEvent("NEW_USER_CREATED")
-    async welcomeNewUser(payload:UserCreatedEvent) {
-        await this.mailerService.sendMail({
-            to: payload.user.email.toString(),
-            subject: 'Greeting from Driving School',
-            template: './email.hbs',
-            context: {
-                SMTP_USERNAME: this.configService.get<string>('SMTP_USERNAME')
-            }
-        });
-    }
     ////////////////////////////////////////////////
     findAllUsers() {
         return this.userModel.find({});
     }
 
+    async findUserByPhoneNumber(phonenumber: string): Promise<User> {
+        const user = await this.userModel.findOne({ phonenumber: phonenumber });
+        return user;
+    }
+
     async updateUser(user: UpdateUser, userId: ObjectId): Promise<User> {
-        const isUserExist = await this.userModel.findOne({ _id: userId });
+        const isUserExist = await this.userModel.findOne({ _id: new Types.ObjectId(userId)});
         if (!isUserExist) {
             throw new NotFoundException(`User ${userId} does not exist`);
         }
@@ -83,7 +74,7 @@ export class UserService {
     }
 
     async userDelete(userId: ObjectId): Promise<User> {
-        const user = await this.userModel.findByIdAndDelete(userId);
+        const user = await this.userModel.findByIdAndDelete(new Types.ObjectId(userId));
         if (!user) {
             throw new NotFoundException(`User ${userId} does not exist`);
         }
@@ -95,21 +86,22 @@ export class UserService {
         return user;
     }
 
-    async findUserByPhoneNumber(phonenumber: string): Promise<User> {
-        const user = await this.userModel.findOne({ phonenumber: phonenumber });
+    async findUserByPhoneNumberAndEmail(phonenumber: string, email:string): Promise<User> {
+        const user = await this.userModel.findOne({ phonenumber: { $eq : phonenumber}, email: { $eq : email }});
         return user;
     }
 
-    findUserById(id: ObjectId | string) {
-        return this.userModel.findOne({ _id: id });
+    async findUserById(id: ObjectId):Promise<User> {
+        const user:User = await this.userModel.findOne({ _id: new Types.ObjectId(id)});
+        if(!user){
+            throw new NotFoundException(`User ${id} not found`)
+        }
+        return user;
     }
 
     async getUser(userId: ObjectId): Promise<Object> {
         try {
-            const user: User | null = await this.findUserById(userId);
-            if (!user) {
-                throw new BadRequestException(`User ${userId} not found`)
-            }
+            const user:User = await this.findUserById(userId);
             const userschedules = await this.scheduleService.getAllSchdulesByUserid(userId, undefined);
             return {
                 status: HttpStatus.OK,
@@ -122,59 +114,39 @@ export class UserService {
         }
     }
 
-    async createSchedule(scheduleuser: CreateSchedule, userid: ObjectId | string): Promise<Schedule> {
+    async createSchedule(scheduleuser: CreateSchedule, userid: ObjectId): Promise<Schedule> {
             const { scheduledate, scheduletime, trainerdetails } = scheduleuser;
             const todaysDate = new Date();
             const scheduleDate = new Date(scheduledate);
             const todaysUnixDate = this.utilService.convertToUnix(todaysDate);
             const scheduleUnixDate = this.utilService.convertToUnix(scheduleDate);
             const scheduleDateLimit = +this.configService.get("SCHEDULE_DATE_LIMIT") * 24 * 60 * 60;
-            const isUserExist = await this.findUserById(userid);
+            const isUserExist:User = await this.findUserById(userid);
             const startDate = new Date(isUserExist.startDate.toString());
             const startDateUnix = this.utilService.convertToUnix(startDate);
-            const isScheduleExist = await this.scheduleService.findScheduleBasedOnDateAndUserId(scheduledate, userid);
-            const trainer = await this.trainerService.findTrainerAvailableForUser(trainerdetails.email, trainerdetails.phonenumber, scheduletime, scheduledate);
+            await this.scheduleService.findScheduleBasedOnDateAndUserId(scheduledate, userid);
+            const trainer:Trainer = await this.trainerService.findTrainerAvailableForUser(trainerdetails.email, trainerdetails.phonenumber, scheduletime, scheduledate);
             if( scheduleUnixDate< startDateUnix){
                 throw new ServiceUnavailableException(`Schedule create will be available on ${isUserExist.startDate}`);
             }
             else if (scheduleUnixDate - todaysUnixDate > scheduleDateLimit) {
                 throw new BadRequestException(`Schedule must be ${this.configService.get("SCHEDULE_DATE_LIMIT")} days prior to today's date.`);
             } 
-            else if (isScheduleExist) {
-                throw new BadRequestException(`Schedule with date ${isScheduleExist.scheduledate} already scheduled.`);
-            }
             const newSchedule = await this.scheduleService.create(scheduleuser, isUserExist.name, isUserExist.startDate, isUserExist.endDate, isUserExist.phonenumber, isUserExist._id);
-            await this.trainerService.addNewScheduleToTrainer(trainer.email,newSchedule._id, newSchedule.scheduledate, newSchedule.scheduletime, newSchedule.status);
+            await this.trainerService.addNewScheduleToTrainer(trainer.email, trainer.phonenumber,newSchedule._id, newSchedule.scheduledate, newSchedule.scheduletime, newSchedule.status);
             return newSchedule;
     }
 
-    async editSchedule(updateschedule: UpdateSchedule, scheduleId: ObjectId): Promise<Schedule> {
-        const isScheduleExist = await this.scheduleService.findScheduleBasedOnId(scheduleId);
-        if (!isScheduleExist) throw new NotFoundException(`Schedule not found.`);
-        const updateKeys = Object.keys(updateschedule);
-        for (let i = 0; i < updateKeys.length; i++) {
-            switch (updateKeys[i]) {
-                case "schedulename":
-                case "scheduledate":
-                case "scheduletime":
-                case "status":
-                    isScheduleExist[updateKeys[i]] = updateschedule[updateKeys[i]];
-                    break;
-                case "trainerdetails":
-                    const isTrainer = await this.trainerService.findTrainerBasedOnEmail(updateschedule[updateKeys[i]].email);
-                    if (!isTrainer) {
-                        throw new NotFoundException("Trainer not found.");
-                    }
-                    isScheduleExist[updateKeys[i]] = updateschedule[updateKeys[i]];
-                    const newDate = new Date();
-                    isScheduleExist[updateKeys[i]]["updatedAt"] = newDate
-                    break;
-            }
+    async editSchedule(updateschedule: UpdateSchedule, scheduleId: ObjectId, userid: ObjectId | undefined): Promise<Schedule> {
+        let isScheduleExist:Schedule;
+        if(!userid){
+           isScheduleExist = await this.scheduleService.findScheduleBasedOnId(scheduleId);
+        }else{
+          isScheduleExist = await this.scheduleService.findScheduleBasedOnScheduleIdAndUserId(scheduleId, userid);
         }
-        const newDate: Date = new Date();
-        isScheduleExist["updatedAt"] = newDate;
-        await isScheduleExist.save();
-        return isScheduleExist;
+        if (!isScheduleExist) throw new NotFoundException(`Schedule not found.`);
+        const updatedSchedule = await this.scheduleService.updateSchedule(updateschedule, scheduleId);
+        return updatedSchedule;
     }
 
     async deleteSchedule(scheduleId: ObjectId): Promise<Schedule> {
@@ -184,7 +156,7 @@ export class UserService {
         return isSchduleExist;
     }
 
-    async getAllSchedules(userid: ObjectId | string, queryStatus: string | undefined): Promise<Schedule[]> {
+    async getAllSchedules(userid: ObjectId, queryStatus: string | undefined): Promise<Schedule[]> {
         const allSchedules = await this.scheduleService.getAllSchdulesByUserid(userid, queryStatus);
         if (!allSchedules) throw new NotFoundException(`Schedule not found.`);
         if (allSchedules.length === 0) throw new NotFoundException(`Schedule not found.`);
@@ -210,10 +182,19 @@ export class UserService {
         }
     }
 
+    async logout(authToken:string, user: User):Promise<User> {
+        const isUserExist = await this.userModel.findById(new Types.ObjectId(user._id));
+        isUserExist.tokens = isUserExist.tokens.filter(token => {
+            return token.token !== authToken;
+    });
+    await isUserExist.save();
+    if(!isUserExist) throw new BadRequestException(`You are not logged in...`);
+    return isUserExist;
+    }
 
-
-}
-
-function welcomeNewUser() {
-    throw new Error('Function not implemented.');
+    // async changeUserScheduleStatus(scheduleId: ObjectId, userId: ObjectId, status:ScheduleStatusChange ):Promise<Schedule>{
+    //      await this.scheduleService.findScheduleBasedOnScheduleIdAndUserId(scheduleId, userId);
+    //      const updatedSchedule = await this.scheduleService.updateStatusSchedule(scheduleId, status.status);
+    //      return updatedSchedule;
+    // }
 }

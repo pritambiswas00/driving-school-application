@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { ObjectId } from 'mongodb';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
+import { TrainerCreate } from 'src/Dtos/trainer.dto';
 
 export type ScheduleDocument = Schedule & Document;
 enum ScheduleStatus {
@@ -9,6 +10,10 @@ enum ScheduleStatus {
 }
 @Schema()
 export class Schedule {
+
+  @Prop({ type: ObjectId })
+  _id: ObjectId
+  
   @Prop({ required : true, max: 20})
   schedulename: string;
 
@@ -18,7 +23,7 @@ export class Schedule {
   @Prop({ required : false})
   scheduletime: string;
 
-  @Prop({ type: Object, required : true })
+  @Prop({ type: TrainerCreate, required : true })
   trainerdetails: {
         email : {
            type: String,
@@ -37,7 +42,8 @@ export class Schedule {
            model: String,
            make : String,
            vin : String
-      }
+      },
+      updatedAt: Date,
   };
 
   @Prop({ required: true, type : ObjectId })
@@ -57,3 +63,10 @@ export class Schedule {
 }
 
 export const ScheduleSchema = SchemaFactory.createForClass(Schedule);
+ScheduleSchema.pre('save', function(next) {
+  const schedule = this;
+  if(!schedule._id){
+    schedule._id = new Types.ObjectId();
+  }
+  next();
+})

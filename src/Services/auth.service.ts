@@ -1,11 +1,12 @@
-import {  HttpStatus, Injectable, UnauthorizedException} from '@nestjs/common';
+import {  HttpStatus, Injectable, NotFoundException, UnauthorizedException} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { ObjectId } from 'mongodb';
 import { LoginUser, UserPayload } from 'src/Dtos/auth.user.Dtos';
-import { CreateSchedule, UpdateSchedule } from 'src/Dtos/schedule.dtos';
+import { CreateSchedule, ScheduleStatusChange, UpdateSchedule } from 'src/Dtos/schedule.dtos';
 import { Schedule } from 'src/Entity/schedule.model';
 import { Trainer } from 'src/Entity/trainer.model';
+import { User } from 'src/Entity/user.model';
 import { UtilService } from 'src/Utils/Utils';
 import { AdminService } from './admin.service';
 import { UserService }  from "./user.service";
@@ -32,22 +33,18 @@ export class AuthService {
         return [token, isUserPhoneExist];
     }
 
-    async logout (headerToken: string, authPayload: UserPayload) {
-        const existedUser = await this.userService.findUserById(authPayload.userId);
-        existedUser.tokens = existedUser.tokens.filter(token => {
-                return token.token !== headerToken;
-        });
-        await existedUser.save();
+    async logout (headerToken: string, user: User):Promise<string> {
+        await this.userService.logout(headerToken, user);
         return "You have successfully logged out.";
     }
 
-    async createSchedule(schedule:CreateSchedule, userid: ObjectId | string):Promise<Schedule>{
+    async createSchedule(schedule:CreateSchedule, userid: ObjectId):Promise<Schedule>{
             const newSchedule = await this.userService.createSchedule(schedule, userid);
             return newSchedule;
     }
 
-    async updateSchedule(schedule: UpdateSchedule, scheduleId: ObjectId):Promise<Schedule>{
-         const updatedSchedule = await this.userService.editSchedule(schedule, scheduleId);
+    async updateSchedule(schedule: UpdateSchedule, scheduleId: ObjectId, userid: ObjectId):Promise<Schedule>{
+         const updatedSchedule = await this.userService.editSchedule(schedule, scheduleId, userid);
          return updatedSchedule;
     }
 
@@ -56,7 +53,7 @@ export class AuthService {
          return deletedSchedule;
     }
 
-    async getSchedules(userid: ObjectId | string, status : string | undefined):Promise<Schedule[]> {
+    async getSchedules(userid: ObjectId, status : string | undefined):Promise<Schedule[]> {
         const allSchedules = await this.userService.getAllSchedules(userid, status);
         return allSchedules;
     }
@@ -65,5 +62,10 @@ export class AuthService {
               const allTrainers = await this.userService.getAllTrainers(status);
               return allTrainers;
     }
+
+    // async changeUserScheduleStatus(scheduleId:ObjectId, status:ScheduleStatusChange, userId:ObjectId) :Promise<Schedule>{
+    //     const updatedSchedule = await this.userService.changeUserScheduleStatus(scheduleId, userId, status);
+    //     return updatedSchedule;
+    // }
      
 }

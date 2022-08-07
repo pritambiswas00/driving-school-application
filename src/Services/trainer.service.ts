@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, InternalServerErrorException, NotFound
 import { ConfigService } from "@nestjs/config";
 import { InjectModel } from "@nestjs/mongoose";
 import { ObjectId } from "mongodb";
-import { Model} from "mongoose";
+import { Model, Types} from "mongoose";
 import { ScheduleStatus } from "src/Dtos/schedule.dtos";
 import { TrainerCreate, TrainerStatus, TrainerUpdate } from "src/Dtos/trainer.dto";
 import { Trainer, TrainerDocument } from "src/Entity/trainer.model";
@@ -32,17 +32,14 @@ export class TrainerService{
     }
 
     async deleteTrainer(trainerid: ObjectId) { 
-         const trainer = await this.trainerModel.findByIdAndDelete({
-          _id: trainerid
-         });
-         if(!trainer) return null;
+         const trainer = await this.trainerModel.findByIdAndDelete(new Types.ObjectId(trainerid));
          return trainer;
     }
 
     async getAllTrainer(status: string|undefined):Promise<Trainer[]> {
         let trainers:Trainer[]; 
         if(status){
-          trainers = await this.trainerModel.find({ status: status.toUpperCase() });
+          trainers = await this.trainerModel.find({ status: {$eq : status.toUpperCase()}});
           return trainers;
         }
         trainers = await this.trainerModel.find({});
@@ -50,22 +47,17 @@ export class TrainerService{
     }
     
     async findTrainerBasedOnEmailAndPhone(email: string, phonenumber: string):Promise<Trainer> {
-            try{
-               const trainer = await this.trainerModel.findOne({ email: email, phonenumber: phonenumber });
-               if(!trainer) return null;
+               const trainer = await this.trainerModel.findOne({ email: {$eq : email}, phonenumber: { $eq: phonenumber} });
                return trainer;
-            }catch(error){
-               throw new InternalServerErrorException(error)
-            }
     }
 
     async findOneById(id: ObjectId):Promise<Trainer> {
-        const trainer = await this.trainerModel.findOne({ _id: id });
+        const trainer = await this.trainerModel.findOne({ _id: new Types.ObjectId(id)});
         return trainer;
     }
 
-    async editTrainer(trainer: TrainerUpdate, id: ObjectId):Promise<Trainer>{
-        const trainerexist = await this.trainerModel.findOne({ _id: id });
+    async editTrainer(trainer: TrainerUpdate, trainerid: ObjectId):Promise<Trainer>{
+        const trainerexist = await this.trainerModel.findOne({ _id: new Types.ObjectId(trainerid)});
         if(!trainerexist){
             throw new NotFoundException("Trainer not found.");
         }
@@ -95,20 +87,21 @@ export class TrainerService{
     }
 
     async findTrainerAvailableForUser(traineremail:string, trainerphonenumber:string, scheduletime: string, scheduledate:string):Promise<Trainer> {
-           const trainer = await this.trainerModel.findOne({ email: traineremail, status : TrainerStatus.ONLINE, phonenumber: trainerphonenumber});
-           if(!trainer) {
-               throw new BadRequestException(`Trainer is not available for this moment.`)
-           };
-           for(let i = 0; i < trainer.dayScheduleTimeList.length; i++) {
-                if(trainer.dayScheduleTimeList[i].scheduledate === scheduledate && trainer.dayScheduleTimeList[i].scheduletime === scheduletime && trainer.dayScheduleTimeList[i].status === ScheduleStatus.PENDING) {
-                       throw new BadRequestException(`${trainer.trainername} is already booked for this date:${scheduledate} and time:${scheduletime} `)
+           const trainer = await this.trainerModel.findOne({ email: { $eq: traineremail}, status : { $eq :TrainerStatus.ONLINE }, phonenumber: { $eq: trainerphonenumber }});
+            if(!trainer) {
+                 throw new NotFoundException(`Trainer currently not online.`)
+            }
+            for(let i = 0;i < trainer.dayScheduleTimeList.length; i++) {
+                if(trainer.dayScheduleTimeList[i].scheduledate === scheduledate && trainer.dayScheduleTimeList[i].scheduletime === scheduletime) {
+                    throw new ServiceUnavailableException(`Trainer is already book for date ${scheduledate} and time ${scheduletime}`);
                 }
-           }
-           return trainer;
+            }
+            return trainer;
     }
 
-    async addNewScheduleToTrainer(traineremail:string,scheduleid:string, scheduledate:string, scheduletime:string, status: string):Promise<void> {
-           const trainer = await this.trainerModel.findOneAndUpdate({ email: traineremail, status: TrainerStatus.ONLINE}, {
+    async addNewScheduleToTrainer(email:string,phonenumber:string,scheduleid:ObjectId, scheduledate:string, scheduletime:string, status: string):Promise<Trainer> {
+           const date = new Date();
+           const trainer = await this.trainerModel.findOneAndUpdate({ email: { $eq: email }, phonenumber: {$eq: phonenumber }, status: TrainerStatus.ONLINE}, {
                $push: {
                     "dayScheduleTimeList": {
                        scheduleid: scheduleid,
@@ -116,10 +109,25 @@ export class TrainerService{
                        scheduletime: scheduletime,
                        status: status,  
                     }
-               }
+               },
+               $set : { updatedAt: date }
            });
-           const date = new Date();
-           trainer["updatedAt"] = date;
-           await trainer.save();
+           return trainer;
+    }
+
+    async deleteTrainerBooking(traineremail:String, trainerphonenumber :String, scheduleid:ObjectId, scheduletime:string, scheduledate:string, status :string ):Promise<void> {
+            console.log(traineremail, trainerphonenumber, scheduleid, scheduletime, scheduledate, status);
+            const response = await this.trainerModel.updateOne({ email: { $eq: traineremail}, phonenumber: { $eq: trainerphonenumber }}, {
+                   $pull : {
+                       dayScheduleTimeList: {
+                           scheduleid: new Types.ObjectId(scheduleid),
+                           status: status.toUpperCase(),
+                           scheduledate: scheduledate,
+                           scheduletime: scheduletime
+                       }
+                   }
+            });
+
+            console.log(response, "RESPONSE")
     }
 }

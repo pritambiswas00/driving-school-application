@@ -20,7 +20,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule, JwtModuleOptions, JwtService } from '@nestjs/jwt';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { join } from 'path';
-import { MailerModule } from '@nestjs-modules/mailer';
+import { MailerModule, MailerService } from '@nestjs-modules/mailer';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 @Module({ 
   imports: [
@@ -85,10 +85,12 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
           }
         }),
         inject: [ConfigService]}),
-    EventEmitterModule.forRoot()    
+    EventEmitterModule.forRoot({
+       removeListener: true
+    })
    ],
   controllers: [AppController],
   providers: [AppService, UtilService, IsRootInterceptor, JwtService, ConfigService],
-  exports:[PassportModule]
+  exports:[PassportModule, EventEmitterModule]
 })
 export class AppModule {}

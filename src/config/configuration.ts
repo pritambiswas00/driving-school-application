@@ -17,7 +17,8 @@ export const configuration = () => {
         SMTP_HOST: process.env.SMTPHOST,
         SMTP_PORT: process.env.SMTP_PORT,
         SMTP_USERNAME: process.env.SMTP_USERNAME,
-        SMTP_PASSWORD :process.env.SMTP_PASSWORD
+        SMTP_PASSWORD :process.env.SMTP_PASSWORD,
+        MAX_ADMIN_COUNT: process.env.MAX_ADMIN_COUNT,
      }
 }
 

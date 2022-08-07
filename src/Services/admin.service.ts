@@ -33,9 +33,9 @@ export class AdminService {
                throw new UnauthorizedException("Password did not match.")
           }
           const payload = { adminId: isAdminExist._id, email: isAdminExist.email };
-          const token = this.jwtService.sign(payload, { secret: this.configService.get("JWT_SECRET_ADMIN") });
+          const token = this.jwtService.sign(payload, { secret: this.configService.get<string>("JWT_SECRET_ADMIN")});
           const date = new Date();
-          isAdminExist.tokens = [...isAdminExist.tokens, { token, date }]
+          isAdminExist.tokens.concat({ token: token, date: date });
           isAdminExist["updatedAt"] = date;
           await isAdminExist.save();
           return token;
@@ -63,9 +63,9 @@ export class AdminService {
      }
 
      async createUser(user: CreateUser): Promise<User> {
-          let isUserExist: User = await this.userService.findUserByPhoneNumber(user.phonenumber);
+          let isUserExist:User = await this.userService.findUserByPhoneNumberAndEmail(user.phonenumber, user.email);
           if (isUserExist) {
-               throw new BadRequestException(`User ${user.phonenumber} already exists`);
+               throw new BadRequestException(`User ${isUserExist.email} with phone ${user.phonenumber} already exists`);
           }
           isUserExist = await this.userService.create(user);
           return isUserExist;
@@ -96,7 +96,6 @@ export class AdminService {
           if (!deletedUser) {
                throw new BadRequestException("Could not delete user.");
           }
-
           return deletedUser;
      }
 
@@ -110,15 +109,12 @@ export class AdminService {
      }
 
      async editSchedule(userschedule: UpdateSchedule, scheduleId: ObjectId): Promise<Schedule> {
-          const updatedSchedule = await this.userService.editSchedule(userschedule, scheduleId);
+          const updatedSchedule = await this.userService.editSchedule(userschedule, scheduleId, undefined);
           return updatedSchedule;
      }
 
      async getSchedules(userId: ObjectId| undefined, queryStatus: string | undefined): Promise<Schedule[]> {
           const schedules = await this.userService.getSchedulesForAdmin(userId, queryStatus)
-          if(!schedules) {
-                throw new BadRequestException("No Schedules found.");
-          }
           return schedules;
      }
 
@@ -137,12 +133,11 @@ export class AdminService {
      }
 
      async deleteTrainer(trainerid: ObjectId): Promise<Trainer> {
-          const isTrainerExist = await this.trainerService.findOneById(trainerid);
+          const isTrainerExist = await this.trainerService.deleteTrainer(trainerid);
           if (!isTrainerExist) {
                throw new NotFoundException("Trainer not found.");
           }
-          const removeTrainer = await this.trainerService.deleteTrainer(trainerid);
-          return removeTrainer;
+          return isTrainerExist;
      }
 
      async getAllTrainers(status: string | undefined): Promise<Trainer[]> {
