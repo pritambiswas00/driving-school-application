@@ -14,6 +14,7 @@ import { Trainer } from 'src/Entity/trainer.model';
 import { MailerService } from '@nestjs-modules/mailer';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { UserEventTypes } from 'src/Events/Emit/User.emit';
+import { format } from "date-fns"
 
 @Injectable()
 export class UserService {
@@ -114,14 +115,19 @@ export class UserService {
         }
     }
 
-    async createSchedule(scheduleuser: CreateSchedule, userid: ObjectId): Promise<Schedule> {
+    async createSchedule(scheduleuser: CreateSchedule, userid: ObjectId): Promise<any> {
             const { scheduledate, scheduletime, trainerdetails } = scheduleuser;
+            const splitScheduleDate = scheduledate.split("/");
+            const fomratedScheduleDate = format(new Date(`${splitScheduleDate[2]}-${splitScheduleDate[1]}-${splitScheduleDate[0]}`), "yyyy-MM-dd");
+            const newScheduleDate = new Date(fomratedScheduleDate);
             const todaysDate = new Date();
-            const scheduleDate = new Date(scheduledate);
             const todaysUnixDate = this.utilService.convertToUnix(todaysDate);
-            const scheduleUnixDate = this.utilService.convertToUnix(scheduleDate);
-            const scheduleDateLimit = +this.configService.get("SCHEDULE_DATE_LIMIT") * 24 * 60 * 60;
+            const scheduleUnixDate = this.utilService.convertToUnix(newScheduleDate);
+            const scheduleDateLimit = +this.configService.get("SCHEDULE_DATE_LIMIT")* 24 * 60 * 60;
             const isUserExist:User = await this.findUserById(userid);
+            if(+isUserExist.allowschedule === 0) {
+                throw new BadRequestException(`User ${isUserExist.name} does not has any left schedule creation allotment.`);
+            }
             const startDate = new Date(isUserExist.startDate.toString());
             const startDateUnix = this.utilService.convertToUnix(startDate);
             await this.scheduleService.findScheduleBasedOnDateAndUserId(scheduledate, userid);
@@ -129,12 +135,17 @@ export class UserService {
             if( scheduleUnixDate< startDateUnix){
                 throw new ServiceUnavailableException(`Schedule create will be available on ${isUserExist.startDate}`);
             }
-            else if (scheduleUnixDate - todaysUnixDate > scheduleDateLimit) {
+            else if ((scheduleUnixDate - todaysUnixDate) > scheduleDateLimit) {
                 throw new BadRequestException(`Schedule must be ${this.configService.get("SCHEDULE_DATE_LIMIT")} days prior to today's date.`);
-            } 
+            }
+            await this.updateUserAllowSchedule(isUserExist._id); 
             const newSchedule = await this.scheduleService.create(scheduleuser, isUserExist.name, isUserExist.startDate, isUserExist.endDate, isUserExist.phonenumber, isUserExist._id);
             await this.trainerService.addNewScheduleToTrainer(trainer.email, trainer.phonenumber,newSchedule._id, newSchedule.scheduledate, newSchedule.scheduletime, newSchedule.status);
             return newSchedule;
+    }
+
+    async updateUserAllowSchedule (userid: ObjectId):Promise<void> {
+           await this.userModel.findByIdAndUpdate(new Types.ObjectId(userid), { $inc: { allowschedule: -1 }});
     }
 
     async editSchedule(updateschedule: UpdateSchedule, scheduleId: ObjectId, userid: ObjectId | undefined): Promise<Schedule> {

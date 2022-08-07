@@ -39,8 +39,8 @@ export class User {
   @Prop({ required: false, default : Date.now })
   public updatedAt : Date
 
-  @Prop({ required: true, maxlength: 20, trim: true, type:String})
-  public allowschedule: string
+  @Prop({ required: true, MAX_VALUE: 20, trim: true, type:Number})
+  public allowschedule: number
 
   @Prop({ required : false, default: []})
   public tokens : { token : string,

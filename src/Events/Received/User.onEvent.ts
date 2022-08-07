@@ -16,7 +16,9 @@ async welcomeNewUser(payload:User) {
         subject: 'Greeting from Driving School',
         template: './email.hbs',
         context: {
-            SMTP_USERNAME: this.configService.get<string>('SMTP_USERNAME')
+            office_email_address: this.configService.get<string>('SMTP_USERNAME'),
+            office_phone_number: this.configService.get<string>('SMTP_PASSWORD') || 8017393446,
+            user_name: payload.name,
         }
     })
    };

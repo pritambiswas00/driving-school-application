@@ -1,5 +1,5 @@
 import { ApiProperty} from "@nestjs/swagger";
-import { IsEmail, IsString, IsNotEmpty, IsAlphanumeric, IsOptional, Matches, IsBoolean, MaxLength, IsNumber, IsMongoId } from "class-validator";
+import { IsEmail, IsString, IsNotEmpty, IsAlphanumeric, IsOptional, Matches, IsBoolean, MaxLength, IsNumber, IsMongoId, Max,  } from "class-validator";
 import { ObjectId } from "mongodb";
 export class AddAdmin {
 
@@ -74,10 +74,10 @@ export class CreateUser {
     public endDate? : string;
 
     @ApiProperty({ required : true })
-    @MaxLength(2)
-    @IsString()
+    @Max(20)
+    @IsNumber()
     @IsNotEmpty()
-    public allowschedule: string
+    public allowschedule: number
 }
 
 
@@ -103,10 +103,10 @@ export class UpdateUser {
     public endDate? : string;
 
     @ApiProperty({ required : false })
-    @MaxLength(2)
-    @IsString()
+    @Max(20)
+    @IsNumber()
     @IsOptional()
-    public allowschedule?: string;
+    public allowschedule?: number;
 }
 
 export class AdminPayload {

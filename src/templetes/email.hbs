@@ -1,10 +1,41 @@
-<div style="background: green; border: 5px solid lightgreen; margin: 5px; padding: 5px; font-size: 20px; font-family: Times-New Roman; font-weight: 600px; border-radius: 5px; width: fit-content;">
-  <h3>Thank you for Joining Driving School.</h3>
-  <div>
-    <p>Hope you have a great day.</p>
-    <p>Regards,</p>
-    <p>{{SMTP_USERNAME}}</p>
-  </div>
-</div>
+<div style="margin-inline: auto; 
+                width: 100%; background-color:gainsboro; 
+                min-height: 500px; height: 100%; display: flex; 
+                justify-content: center; align-items: center;">
+        <div style="text-align: center; width: 60%;
+                    max-width: 600px;margin: 20px; background-color: white; 
+                    box-shadow: 1px 1px 10px 1px gray; padding: 16px;
+                    border-radius: 8px;">
+            <h1>Sri Sai Driving School.</h1>
+            <section style="text-align: justify;font-style: italic;">
+                <h4>Hi {{user_name}},</h4>
+            <p style="font-style: italic;">Welcome to 
+                <span style="font-weight: 700;">Sri Sai Driving School</span>.
+            You are registered for the Driving school.
+            Now you install the app which is provided by the school, 
+            and book the session on any time between 7:00 AM to 
+            5:00 PM. 
+            </p>
+            <h4 style="text-align: center;">Have a great day!!</h4>
+            <div style="font-weight: 700;">Thank you</div>
+            <div>
+                Hope you have a great driving experience.
+            </div>
+            <section style=" max-width: 250px; margin-top: 20px ">
+                <address style="border-radius: 8px; padding:4px; line-height: 22px;">
+                <h4 style="margin: 0px; font-weight: 800;">Contact:</h4>
+                    <div style="width: 90%;margin-bottom: 5px; text-align: left;">
+                    address of the driving school djflkasjdfkljf
+                    jdsklfjaslkf asfjksl jflkjflkjasldfa
+                    </div>
+                    <div style="margin-bottom: 5px;">
+                    Ph : {{office_phone_number}}
+                    </div>
+                    Email: {{office_email_address}}
+                </address>
+            </section>
+            </section>
+        </div>
+    </div>
 {{! Language: handlebars }}
 {{! Path: src\templetes\email.hbs }}    
