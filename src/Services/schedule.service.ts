@@ -88,7 +88,7 @@ export class ScheduleService{
 
      async deleteSchedule(id:ObjectId){
          const isSchduleExist = await this.scheduleModel.findOneAndDelete({
-          _id: id
+          _id: new Types.ObjectId(id)
          });
          return isSchduleExist;
      }
