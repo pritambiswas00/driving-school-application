@@ -16,12 +16,13 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Trainer } from 'src/Entity/trainer.model';
 import { MailerService } from '@nestjs-modules/mailer';
+import { LazyModuleLoader } from '@nestjs/core';
 
 
 
 @Injectable()
 export class AdminService {
-     constructor(@InjectModel(Admin.name) private readonly adminModel: Model<AdminDocument>, private readonly userService: UserService, private readonly utilService: UtilService, private readonly trainerService: TrainerService, private readonly jwtService: JwtService, private readonly configService: ConfigService) { }
+     constructor(@InjectModel(Admin.name) private readonly adminModel: Model<AdminDocument>, private readonly userService: UserService, private readonly utilService: UtilService, private readonly trainerService: TrainerService, private readonly jwtService: JwtService, private readonly configService: ConfigService, private readonly lazyModuleLoader: LazyModuleLoader) { }
 
      async login(admin: Login): Promise<string> {
           const isAdminExist = await this.adminModel.findOne({ email: admin.email });

@@ -1,16 +1,15 @@
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { LazyModuleLoader } from "@nestjs/core";
 import { Cron,CronExpression } from "@nestjs/schedule"
 import { UserService } from "./user.service";
 
 
 @Injectable()
 export class CronService {
-    constructor(private readonly userService:UserService,private readonly configService:ConfigService){}
+    constructor(private readonly userService:UserService,private readonly configService:ConfigService, private readonly lazyModuleLoader: LazyModuleLoader){}
       @Cron(CronExpression.EVERY_12_HOURS)
       async deleteInvalidTokenAdmin(){
-         console.log("Timeout started")
-         const message:string = await this.userService.deleteAllTokens();
-         console.log(message);
+         await this.userService.deleteAllTokens();
      }
 }

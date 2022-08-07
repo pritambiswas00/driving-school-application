@@ -1,13 +1,17 @@
 import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { LazyModuleLoader } from '@nestjs/core';
 import { OnEvent } from '@nestjs/event-emitter';
-import { User } from 'src/Entity/user.model';
+import { InjectModel } from '@nestjs/mongoose';
+import { ObjectId } from 'mongodb';
+import { Model } from 'mongoose';
+import { User, UserDocument } from 'src/Entity/user.model';
 import { UserEventTypes } from '../Emit/User.emit';
 
 @Injectable()
 export class UserCreatedEvent {
-    constructor(private readonly mailerService:MailerService, private readonly configService:ConfigService){}
+    constructor(@InjectModel(User.name) private readonly userModel: Model<UserDocument>,private readonly mailerService:MailerService, private readonly configService:ConfigService, private readonly lazyModuleLoader: LazyModuleLoader){}
 
 @OnEvent(UserEventTypes.NEW_USER_CREATED, { async: true })
 async welcomeNewUser(payload:User) {
@@ -22,4 +26,9 @@ async welcomeNewUser(payload:User) {
         }
     })
    };
+
+@OnEvent(UserEventTypes.USER_SCHEDULE_UPDATE, { async: true })
+async onUserAllowScheduleUpdate(payload: ObjectId) {
+      const response = await this.userModel.findByIdAndUpdate(payload, { $inc: { allowschedule: +1 }});
+  }   
 }

@@ -1,18 +1,19 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
+import { LazyModuleLoader } from "@nestjs/core";
 import { EventEmitter2, OnEvent } from "@nestjs/event-emitter";
 import { InjectModel } from "@nestjs/mongoose";
 import { trimEnd } from "lodash";
 import { ObjectId } from "mongodb";
 import { Model, Types } from "mongoose";
-import { scheduled } from "rxjs";
 import { CreateSchedule, ScheduleStatus, ScheduleStatusChange, UpdateSchedule } from "src/Dtos/schedule.dtos";
 import { Schedule, ScheduleDocument } from 'src/Entity/schedule.model';
 import { ScheduleEventTypes, ScheduleStatusUpdateEvent, ScheduleTrainerUpdateEvent } from "src/Events/Emit/Schedule.emit";
+import { UserEventTypes } from "src/Events/Emit/User.emit";
 import { TrainerService } from "./trainer.service";
 
 @Injectable()
 export class ScheduleService{
-     constructor(@InjectModel(Schedule.name) private readonly scheduleModel: Model<ScheduleDocument>, private readonly trainerService:TrainerService, private eventEmitter:EventEmitter2){}
+     constructor(@InjectModel(Schedule.name) private readonly scheduleModel: Model<ScheduleDocument>, private readonly trainerService:TrainerService, private eventEmitter:EventEmitter2, private readonly lazyModuleLoader: LazyModuleLoader){}
 
 
      async create(schedule: CreateSchedule, name: String, startDate:String, endDate: String, phonenumber: String, userid: ObjectId) {
@@ -45,6 +46,9 @@ export class ScheduleService{
                     schedule[updateKeys[i]] = updateschedule[updateKeys[i]];
                     if(updateschedule[updateKeys[i]] === ScheduleStatus.COMPLETED || updateschedule[updateKeys[i]] === ScheduleStatus.CANCELLED) {
                          await this.eventEmitter.emitAsync(ScheduleEventTypes.SCHEDULE_STATUS_UPDATE, new ScheduleStatusUpdateEvent(schedule.trainerdetails.email.toString(), schedule.trainerdetails.phonenumber.toString(), schedule._id, ScheduleStatus.PENDING, schedule.scheduledate, schedule.scheduletime));
+                    }
+                    if(updateschedule[updateKeys[i]] === ScheduleStatus.CANCELLED) {
+                         await this.eventEmitter.emitAsync(UserEventTypes.USER_SCHEDULE_UPDATE, schedule.userid);
                     }
                         break;
                   case "trainerdetails":
@@ -95,7 +99,6 @@ export class ScheduleService{
 
      async getAllSchdulesByUserid(userid: ObjectId, queryStatus:string|undefined):Promise<Schedule[]>{
           let allSchedules:Schedule[];
-          console.log(userid, queryStatus);
           if(queryStatus) {
                allSchedules = await this.scheduleModel.find({
                     userid: new Types.ObjectId(userid),

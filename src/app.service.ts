@@ -7,12 +7,13 @@ import { ConfigService } from "@nestjs/config";
 import { UtilService } from "./Utils/Utils";
 import { ObjectId } from "mongodb";
 import { JwtService } from "@nestjs/jwt";
+import { LazyModuleLoader } from "@nestjs/core";
 
 
 
 @Injectable()
 export class AppService {
-    constructor(@InjectModel(Admin.name) private readonly adminModel: Model<AdminDocument>, private readonly configService:ConfigService, private readonly utilService: UtilService, private readonly jwtService: JwtService) {}
+    constructor(@InjectModel(Admin.name) private readonly adminModel: Model<AdminDocument>, private readonly configService:ConfigService, private readonly utilService: UtilService, private readonly jwtService: JwtService, private readonly lazyModuleLoader: LazyModuleLoader) {}
 
 
      login (@Body() superadmin: Login):Promise<string> { 

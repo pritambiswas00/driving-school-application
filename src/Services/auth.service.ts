@@ -1,5 +1,6 @@
 import {  HttpStatus, Injectable, NotFoundException, UnauthorizedException} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { LazyModuleLoader } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { ObjectId } from 'mongodb';
 import { LoginUser, UserPayload } from 'src/Dtos/auth.user.Dtos';
@@ -12,7 +13,7 @@ import { AdminService } from './admin.service';
 import { UserService }  from "./user.service";
 @Injectable()
 export class AuthService {
-    constructor(private readonly userService : UserService, private readonly utils: UtilService, private readonly jwtService:JwtService, private readonly configService:ConfigService, private readonly adminService:AdminService) {}
+    constructor(private readonly userService : UserService, private readonly utils: UtilService, private readonly jwtService:JwtService, private readonly configService:ConfigService, private readonly adminService:AdminService, private readonly lazyModuleLoader: LazyModuleLoader) {}
 
 
     async login(userDetails : LoginUser) {

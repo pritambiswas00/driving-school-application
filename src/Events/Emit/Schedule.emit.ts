@@ -11,5 +11,5 @@ export class ScheduleStatusUpdateEvent {
 
 export enum ScheduleEventTypes {
         SCHEDULE_TRAINER_UPDATE_EVENT = "SCHEDULE_TRAINER_UPDATE_EVENT",
-        SCHEDULE_STATUS_UPDATE = "SCHEDULE_STATUS_UPDATE"
+        SCHEDULE_STATUS_UPDATE = "SCHEDULE_STATUS_UPDATE",
 }

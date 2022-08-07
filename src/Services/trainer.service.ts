@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, ServiceUnavailableException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { LazyModuleLoader } from "@nestjs/core";
 import { InjectModel } from "@nestjs/mongoose";
 import { ObjectId } from "mongodb";
 import { Model, Types} from "mongoose";
@@ -11,7 +12,7 @@ import { UtilService } from "src/Utils/Utils";
 
 @Injectable()
 export class TrainerService{
-    constructor(@InjectModel(Trainer.name) private readonly trainerModel: Model<TrainerDocument>, private readonly configService: ConfigService, private readonly utilService: UtilService){}
+    constructor(@InjectModel(Trainer.name) private readonly trainerModel: Model<TrainerDocument>, private readonly configService: ConfigService, private readonly utilService: UtilService, private readonly lazyModuleLoader: LazyModuleLoader){}
 
     async findTrainerBasedOnEmail(email : string) {
          const isTrainerExist = await this.trainerModel.findOne({ email : email });
@@ -116,7 +117,6 @@ export class TrainerService{
     }
 
     async deleteTrainerBooking(traineremail:String, trainerphonenumber :String, scheduleid:ObjectId, scheduletime:string, scheduledate:string, status :string ):Promise<void> {
-            console.log(traineremail, trainerphonenumber, scheduleid, scheduletime, scheduledate, status);
             const response = await this.trainerModel.updateOne({ email: { $eq: traineremail}, phonenumber: { $eq: trainerphonenumber }}, {
                    $pull : {
                        dayScheduleTimeList: {
@@ -127,7 +127,5 @@ export class TrainerService{
                        }
                    }
             });
-
-            console.log(response, "RESPONSE")
     }
 }

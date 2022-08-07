@@ -24,7 +24,6 @@ export class UtilService {
     }
 
    convertToUnix (date: Date) {
-      console.log(date.getTime(), "Time")
       const unixDate = parseInt((date.getTime() / 1000).toFixed(0));
       return unixDate;
    }

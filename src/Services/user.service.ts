@@ -15,10 +15,11 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { UserEventTypes } from 'src/Events/Emit/User.emit';
 import { format } from "date-fns"
+import { LazyModuleLoader } from '@nestjs/core';
 
 @Injectable()
 export class UserService {
-    constructor(@InjectModel(User.name) private readonly userModel: Model<UserDocument>, private readonly scheduleService: ScheduleService, private readonly configService: ConfigService, private readonly utilService: UtilService, private readonly trainerService: TrainerService, private readonly mailerService:MailerService, private readonly eventEmitter:EventEmitter2) { }
+    constructor(@InjectModel(User.name) private readonly userModel: Model<UserDocument>, private readonly scheduleService: ScheduleService, private readonly configService: ConfigService, private readonly utilService: UtilService, private readonly trainerService: TrainerService, private readonly mailerService:MailerService, private readonly eventEmitter:EventEmitter2, private readonly lazyModuleLoader: LazyModuleLoader) { }
 
     async create(user: CreateUser) {
         try {
@@ -132,7 +133,7 @@ export class UserService {
             const startDateUnix = this.utilService.convertToUnix(startDate);
             await this.scheduleService.findScheduleBasedOnDateAndUserId(scheduledate, userid);
             const trainer:Trainer = await this.trainerService.findTrainerAvailableForUser(trainerdetails.email, trainerdetails.phonenumber, scheduletime, scheduledate);
-            if( scheduleUnixDate< startDateUnix){
+            if( scheduleUnixDate < startDateUnix){
                 throw new ServiceUnavailableException(`Schedule create will be available on ${isUserExist.startDate}`);
             }
             else if ((scheduleUnixDate - todaysUnixDate) > scheduleDateLimit) {
@@ -145,7 +146,7 @@ export class UserService {
     }
 
     async updateUserAllowSchedule (userid: ObjectId):Promise<void> {
-           await this.userModel.findByIdAndUpdate(new Types.ObjectId(userid), { $inc: { allowschedule: -1 }});
+            await this.userModel.findByIdAndUpdate(new Types.ObjectId(userid), { $inc: { allowschedule: -1 }});
     }
 
     async editSchedule(updateschedule: UpdateSchedule, scheduleId: ObjectId, userid: ObjectId | undefined): Promise<Schedule> {
