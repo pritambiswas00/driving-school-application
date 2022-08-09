@@ -117,7 +117,7 @@ export class TrainerService{
     }
 
     async deleteTrainerBooking(traineremail:String, trainerphonenumber :String, scheduleid:ObjectId, scheduletime:string, scheduledate:string, status :string ):Promise<void> {
-            const response = await this.trainerModel.updateOne({ email: { $eq: traineremail}, phonenumber: { $eq: trainerphonenumber }}, {
+            await this.trainerModel.updateOne({ email: { $eq: traineremail}, phonenumber: { $eq: trainerphonenumber }}, {
                    $pull : {
                        dayScheduleTimeList: {
                            scheduleid: new Types.ObjectId(scheduleid),

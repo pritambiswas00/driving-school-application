@@ -10,19 +10,24 @@ import { TrainerService } from './trainer.service';
 import { ObjectId } from 'mongodb';
 import { User } from 'src/Entity/user.model';
 import { TrainerCreate, TrainerUpdate } from 'src/Dtos/trainer.dto';
-import { CreateSchedule, UpdateSchedule } from 'src/Dtos/schedule.dtos';
+import { CreateSchedule, ScheduleStatus, UpdateSchedule } from 'src/Dtos/schedule.dtos';
 import { Schedule } from 'src/Entity/schedule.model';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Trainer } from 'src/Entity/trainer.model';
 import { MailerService } from '@nestjs-modules/mailer';
 import { LazyModuleLoader } from '@nestjs/core';
+import { ScheduleService } from './schedule.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ScheduleEventTypes, ScheduleStatusUpdateEvent } from 'src/Events/Emit/Schedule.emit';
+import { UserEventTypes } from 'src/Events/Emit/User.emit';
+import { AdminEventTypes, AdminTrainerAndUserUpdateEvent } from 'src/Events/Emit/Admin.emit';
 
 
 
 @Injectable()
 export class AdminService {
-     constructor(@InjectModel(Admin.name) private readonly adminModel: Model<AdminDocument>, private readonly userService: UserService, private readonly utilService: UtilService, private readonly trainerService: TrainerService, private readonly jwtService: JwtService, private readonly configService: ConfigService, private readonly lazyModuleLoader: LazyModuleLoader) { }
+     constructor(@InjectModel(Admin.name) private readonly adminModel: Model<AdminDocument>, private readonly userService: UserService, private readonly utilService: UtilService, private readonly trainerService: TrainerService, private readonly jwtService: JwtService, private readonly configService: ConfigService, private readonly lazyModuleLoader: LazyModuleLoader, private readonly scheduleService:ScheduleService, private readonly eventEmitter: EventEmitter2) { }
 
      async login(admin: Login): Promise<string> {
           const isAdminExist = await this.adminModel.findOne({ email: admin.email });
@@ -106,7 +111,13 @@ export class AdminService {
      }
 
      async deleteSchedule(scheduleId: ObjectId): Promise<Schedule> {
-          return this.userService.deleteSchedule(scheduleId);
+           const isScheduleExist = await this.scheduleService.findScheduleBasedOnId(scheduleId);
+           if(!isScheduleExist) throw new NotFoundException("Schedule not found.");
+           else if(isScheduleExist.status === ScheduleStatus.COMPLETED)throw new BadRequestException("Completed schedule can not be deleted.");
+           else if(isScheduleExist.status === ScheduleStatus.PENDING) {
+              await this.eventEmitter.emitAsync(AdminEventTypes.ADMIN_TRAINER_USER_UPDATE, new AdminTrainerAndUserUpdateEvent(isScheduleExist));
+           }
+          return this.scheduleService.deleteSchedule(scheduleId);
      }
 
      async editSchedule(userschedule: UpdateSchedule, scheduleId: ObjectId): Promise<Schedule> {

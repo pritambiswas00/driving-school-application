@@ -5,13 +5,16 @@ import { LazyModuleLoader } from '@nestjs/core';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import { ObjectId } from 'mongodb';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
+import { ScheduleStatus } from 'src/Dtos/schedule.dtos';
+import { Schedule } from 'src/Entity/schedule.model';
 import { User, UserDocument } from 'src/Entity/user.model';
+import { TrainerService } from 'src/Services/trainer.service';
 import { UserEventTypes } from '../Emit/User.emit';
 
 @Injectable()
 export class UserCreatedEvent {
-    constructor(@InjectModel(User.name) private readonly userModel: Model<UserDocument>,private readonly mailerService:MailerService, private readonly configService:ConfigService, private readonly lazyModuleLoader: LazyModuleLoader){}
+    constructor(@InjectModel(User.name) private readonly userModel: Model<UserDocument>,private readonly mailerService:MailerService, private readonly configService:ConfigService, private readonly lazyModuleLoader: LazyModuleLoader, private readonly trainerService:TrainerService){}
 
 @OnEvent(UserEventTypes.NEW_USER_CREATED, { async: true })
 async welcomeNewUser(payload:User) {
@@ -28,7 +31,8 @@ async welcomeNewUser(payload:User) {
    };
 
 @OnEvent(UserEventTypes.USER_SCHEDULE_UPDATE, { async: true })
-async onUserAllowScheduleUpdate(payload: ObjectId) {
-      const response = await this.userModel.findByIdAndUpdate(payload, { $inc: { allowschedule: +1 }});
+async onUserAllowScheduleUpdate(payload: Schedule) {
+      await this.userModel.findByIdAndUpdate(new Types.ObjectId(payload.userid), { $inc: { allowschedule: +1 }});
+      await this.trainerService.deleteTrainerBooking(payload.trainerdetails.email.toString(), payload.trainerdetails.phonenumber.toString(), payload._id, payload.scheduletime, payload.scheduledate, ScheduleStatus.PENDING);
   }   
 }

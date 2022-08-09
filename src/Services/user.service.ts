@@ -131,7 +131,7 @@ export class UserService {
             }
             const startDate = new Date(isUserExist.startDate.toString());
             const startDateUnix = this.utilService.convertToUnix(startDate);
-            await this.scheduleService.findScheduleBasedOnDateAndUserId(scheduledate, userid);
+            await this.scheduleService.findScheduleBasedOnDateAndUserIdAndStatus(scheduledate, userid);
             const trainer:Trainer = await this.trainerService.findTrainerAvailableForUser(trainerdetails.email, trainerdetails.phonenumber, scheduletime, scheduledate);
             if( scheduleUnixDate < startDateUnix){
                 throw new ServiceUnavailableException(`Schedule create will be available on ${isUserExist.startDate}`);
@@ -149,6 +149,14 @@ export class UserService {
             await this.userModel.findByIdAndUpdate(new Types.ObjectId(userid), { $inc: { allowschedule: -1 }});
     }
 
+    async updateUserScheduleAllotment(userid:ObjectId, type:string) {
+           if(type === "INC") {
+                await this.userModel.findByIdAndUpdate(new Types.ObjectId(userid), { $inc: { allowschedule: 1 }});
+           }else if(type === "DEC") {
+               await this.userModel.findByIdAndUpdate(new Types.ObjectId(userid), { $inc: { allowschedule: -1 }});
+           }
+    }
+
     async editSchedule(updateschedule: UpdateSchedule, scheduleId: ObjectId, userid: ObjectId | undefined): Promise<Schedule> {
         let isScheduleExist:Schedule;
         if(!userid){
@@ -157,15 +165,18 @@ export class UserService {
           isScheduleExist = await this.scheduleService.findScheduleBasedOnScheduleIdAndUserId(scheduleId, userid);
         }
         if (!isScheduleExist) throw new NotFoundException(`Schedule not found.`);
+        else if (isScheduleExist.status === ScheduleStatus.COMPLETED || isScheduleExist.status === ScheduleStatus.CANCELLED ) throw new BadRequestException(`Schedule is already ${isScheduleExist.status}. cannot be edited.`);
         const updatedSchedule = await this.scheduleService.updateSchedule(updateschedule, scheduleId);
         return updatedSchedule;
     }
 
     async deleteSchedule(scheduleId: ObjectId): Promise<Schedule> {
-        let isSchduleExist = await this.scheduleService.findScheduleBasedOnId(scheduleId);
-        if (!isSchduleExist) throw new NotFoundException(`Schedule not found.`);
-        isSchduleExist = await this.scheduleService.deleteSchedule(scheduleId);
-        return isSchduleExist;
+        let isScheduleExist = await this.scheduleService.findScheduleBasedOnId(scheduleId);
+        if (!isScheduleExist) throw new NotFoundException(`Schedule not found.`);
+        else if(isScheduleExist.status !== ScheduleStatus.PENDING) throw new BadRequestException(`Schedule status is ${isScheduleExist.status} and cannot be deleted.`);
+        isScheduleExist = await this.scheduleService.deleteSchedule(scheduleId);
+        await this.eventEmitter.emitAsync(UserEventTypes.USER_SCHEDULE_UPDATE, isScheduleExist);
+        return isScheduleExist;
     }
 
     async getAllSchedules(userid: ObjectId, queryStatus: string | undefined): Promise<Schedule[]> {

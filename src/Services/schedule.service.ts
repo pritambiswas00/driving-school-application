@@ -29,7 +29,7 @@ export class ScheduleService{
              });
              await newSchedule.save();
              return newSchedule;
-     }
+     } 
 
      async updateSchedule(updateschedule: UpdateSchedule, scheduleid:ObjectId) {
           const schedule = await this.scheduleModel.findOne({ _id: new Types.ObjectId(scheduleid)});
@@ -48,7 +48,7 @@ export class ScheduleService{
                          await this.eventEmitter.emitAsync(ScheduleEventTypes.SCHEDULE_STATUS_UPDATE, new ScheduleStatusUpdateEvent(schedule.trainerdetails.email.toString(), schedule.trainerdetails.phonenumber.toString(), schedule._id, ScheduleStatus.PENDING, schedule.scheduledate, schedule.scheduletime));
                     }
                     if(updateschedule[updateKeys[i]] === ScheduleStatus.CANCELLED) {
-                         await this.eventEmitter.emitAsync(UserEventTypes.USER_SCHEDULE_UPDATE, schedule.userid);
+                         await this.eventEmitter.emitAsync(UserEventTypes.USER_SCHEDULE_UPDATE, schedule);
                     }
                         break;
                   case "trainerdetails":
@@ -68,8 +68,16 @@ export class ScheduleService{
           return schedule;
      }
 
-     async findScheduleBasedOnDateAndUserId(date: string, userid: ObjectId){
+     async findScheduleBasedOnDateAndUserId(date: string, userid: ObjectId):Promise<Schedule>{
           const schedule = await this.scheduleModel.findOne({scheduledate: { $eq: date }, userid: { $eq : new Types.ObjectId(userid)}});
+          if(schedule) {
+               throw new NotFoundException(`Schedule with date ${date} already scheduled.`);
+          }
+          return schedule;
+     }
+
+     async findScheduleBasedOnDateAndUserIdAndStatus(date: string, userid: ObjectId):Promise<Schedule>{
+          const schedule = await this.scheduleModel.findOne({scheduledate: { $eq: date }, userid: { $eq : new Types.ObjectId(userid)}, status: ScheduleStatus.PENDING});
           if(schedule) {
                throw new NotFoundException(`Schedule with date ${date} already scheduled.`);
           }
