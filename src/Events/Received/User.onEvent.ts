@@ -4,7 +4,6 @@ import { ConfigService } from '@nestjs/config';
 import { LazyModuleLoader } from '@nestjs/core';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
-import { ObjectId } from 'mongodb';
 import { Model, Types } from 'mongoose';
 import { ScheduleStatus } from 'src/Dtos/schedule.dtos';
 import { Schedule } from 'src/Entity/schedule.model';

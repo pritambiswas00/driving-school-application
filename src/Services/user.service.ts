@@ -116,7 +116,7 @@ export class UserService {
         }
     }
 
-    async createSchedule(scheduleuser: CreateSchedule, userid: ObjectId): Promise<any> {
+    async createSchedule(scheduleuser: CreateSchedule, userid: ObjectId): Promise<Schedule> {
             const { scheduledate, scheduletime, trainerdetails } = scheduleuser;
             const splitScheduleDate = scheduledate.split("/");
             const fomratedScheduleDate = format(new Date(`${splitScheduleDate[2]}-${splitScheduleDate[1]}-${splitScheduleDate[0]}`), "yyyy-MM-dd");
@@ -153,7 +153,7 @@ export class UserService {
 
     async updateUserScheduleAllotment(userid:ObjectId, type:string) {
            if(type === "INC") {
-                await this.userModel.findByIdAndUpdate(new Types.ObjectId(userid), { $inc: { allowschedule: 1 }});
+                await this.userModel.findByIdAndUpdate(new Types.ObjectId(userid), { $inc: { allowschedule: +1 }});
            }else if(type === "DEC") {
                await this.userModel.findByIdAndUpdate(new Types.ObjectId(userid), { $inc: { allowschedule: -1 }});
            }

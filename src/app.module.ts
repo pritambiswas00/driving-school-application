@@ -56,7 +56,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
               const options:JwtModuleOptions = {
                   secret: config.get<string>("JWT_SECRET_ROOT"),
                   signOptions: {
-                      expiresIn: `${config.get<string>("JWT_EXPIRATION_IN_SECONDS")}s` ,
+                      expiresIn: `${config.get<string>("JWT_EXPIRATION_IN_SECONDS")}` ,
                   }
               }
               return options;

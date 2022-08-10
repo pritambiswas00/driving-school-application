@@ -35,7 +35,7 @@ import { AdminTrainerAndUserUpdateOnEvent } from 'src/Events/Received/Admin.onEv
           const options:JwtModuleOptions = {
               secret: config.get("JWT_SECRET_ADMIN"),
               signOptions: {
-                  expiresIn: `${config.get<string>("JWT_EXPIRATION_IN_SECONDS")}s`,
+                  expiresIn: `${config.get<string>("JWT_EXPIRATION_IN_SECONDS")}`,
               }
           }
           return options;

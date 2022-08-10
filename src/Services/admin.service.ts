@@ -1,6 +1,6 @@
 import { BadRequestException, HttpStatus, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Admin, AdminDocument } from 'src/Entity/admin.model';
 import { UserService } from './user.service';
 import { CreateUser, Login, UpdateUser } from 'src/Dtos/admin.dtos';
@@ -30,7 +30,7 @@ export class AdminService {
      constructor(@InjectModel(Admin.name) private readonly adminModel: Model<AdminDocument>, private readonly userService: UserService, private readonly utilService: UtilService, private readonly trainerService: TrainerService, private readonly jwtService: JwtService, private readonly configService: ConfigService, private readonly lazyModuleLoader: LazyModuleLoader, private readonly scheduleService:ScheduleService, private readonly eventEmitter: EventEmitter2) { }
 
      async login(admin: Login): Promise<string> {
-          const isAdminExist = await this.adminModel.findOne({ email: admin.email });
+          let isAdminExist:Admin = await this.adminModel.findOne({ email: admin.email });
           if (!isAdminExist) {
                throw new UnauthorizedException(`Email ${admin.email} doesnot exist.`)
           }
@@ -40,28 +40,34 @@ export class AdminService {
           }
           const payload = { adminId: isAdminExist._id, email: isAdminExist.email };
           const token = this.jwtService.sign(payload, { secret: this.configService.get<string>("JWT_SECRET_ADMIN")});
+          console.log(token, "TOKEN")
           const date = new Date();
-          isAdminExist.tokens.concat({ token: token, date: date });
-          isAdminExist["updatedAt"] = date;
-          await isAdminExist.save();
+          await this.adminModel.updateOne({
+              email: { $eq : admin.email },
+              phonenumber: { $eq : isAdminExist.phonenumber }
+          }, {
+               $push : { tokens : { token , date } }
+          })
           return token;
      }
 
      async logout(headerToken: string, admin: any): Promise<string> {
           try {
-               const existedAdmin = await this.adminModel.findOne({ _id: admin._id });
+               const existedAdmin = await this.adminModel.findOne({ _id: new Types.ObjectId(admin._id) });
+               if(!existedAdmin) throw new BadRequestException("You are not logged in.");
                existedAdmin.tokens = existedAdmin.tokens.filter(token => {
                     return token.token !== headerToken;
                });
                await existedAdmin.save();
                return "You have successfully logged out.";
           } catch (error) {
+               console.log(error);
                throw new BadRequestException(error);
           }
      }
 
      async findAdminById(id: ObjectId | string): Promise<Admin> {
-          return this.adminModel.findOne({ _id: id });
+          return this.adminModel.findOne({ _id: new Types.ObjectId(id)});
      }
 
      async findAdminByEmail(email: string): Promise<Admin> {

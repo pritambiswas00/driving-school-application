@@ -36,7 +36,7 @@ import { ScheduleTrainerUpdate } from 'src/Events/Received/Schedule.onEvent';
           const options:JwtModuleOptions = {
               secret: config.get<string>("JWT_SECRET_AUTH"),
               signOptions: {
-                  expiresIn:`${config.get<string>("JWT_EXPIRATION_IN_SECONDS")}s`,
+                  expiresIn:`${config.get<string>("JWT_EXPIRATION_IN_SECONDS")}`,
               }
           }
           return options;
