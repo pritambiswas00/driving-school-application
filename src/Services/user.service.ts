@@ -129,7 +129,9 @@ export class UserService {
             if(+isUserExist.allowschedule === 0) {
                 throw new BadRequestException(`User ${isUserExist.name} does not has any left schedule creation allotment.`);
             }
-            const startDate = new Date(isUserExist.startDate.toString());
+            const splitStartDate = isUserExist.startDate.toString().split("/");
+            const fomratedStartDate = format(new Date(`${splitStartDate[2]}-${splitStartDate[1]}-${splitStartDate[0]}`), "yyyy-MM-dd");
+            const startDate = new Date(fomratedStartDate);
             const startDateUnix = this.utilService.convertToUnix(startDate);
             await this.scheduleService.findScheduleBasedOnDateAndUserIdAndStatus(scheduledate, userid);
             const trainer:Trainer = await this.trainerService.findTrainerAvailableForUser(trainerdetails.email, trainerdetails.phonenumber, scheduletime, scheduledate);

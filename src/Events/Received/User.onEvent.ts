@@ -19,6 +19,7 @@ export class UserCreatedEvent {
 @OnEvent(UserEventTypes.NEW_USER_CREATED, { async: true })
 async welcomeNewUser(payload:User) {
     await this.mailerService.sendMail({
+        from: this.configService.get<string>('SMTP_USERNAME'),
         to: payload.email.toString(),
         subject: 'Greeting from Driving School',
         template: './email.hbs',
