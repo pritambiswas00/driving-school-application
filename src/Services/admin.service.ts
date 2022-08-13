@@ -40,7 +40,6 @@ export class AdminService {
           }
           const payload = { adminId: isAdminExist._id, email: isAdminExist.email };
           const token = this.jwtService.sign(payload, { secret: this.configService.get<string>("JWT_SECRET_ADMIN")});
-          console.log(token, "TOKEN")
           const date = new Date();
           await this.adminModel.updateOne({
               email: { $eq : admin.email },
@@ -61,7 +60,6 @@ export class AdminService {
                await existedAdmin.save();
                return "You have successfully logged out.";
           } catch (error) {
-               console.log(error);
                throw new BadRequestException(error);
           }
      }

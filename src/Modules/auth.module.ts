@@ -23,6 +23,7 @@ import { MailerModule, MailerService } from '@nestjs-modules/mailer';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { UserCreatedEvent } from 'src/Events/Received/User.onEvent';
 import { ScheduleTrainerUpdate } from 'src/Events/Received/Schedule.onEvent';
+import { NewTrainerAllotmentEvent } from 'src/Events/Received/Trainer.onEvent';
 
 @Module({
   imports: [MongooseModule.forFeature([{name : User.name, schema : UserSchema}, {name : Schedule.name, schema : ScheduleSchema}, {name : Trainer.name, schema : TrainerSchema}, {name : Admin.name, schema : AdminSchema}]),
@@ -46,7 +47,7 @@ import { ScheduleTrainerUpdate } from 'src/Events/Received/Schedule.onEvent';
   EventEmitterModule.forRoot(),
  ],
   controllers: [AuthController],
-  providers: [AuthService, UserService, UtilService, ScheduleService, TrainerService, IsUserInterceptor, JwtService, ConfigService, CronService, AdminService, UserCreatedEvent, ScheduleTrainerUpdate],
+  providers: [AuthService, UserService, UtilService, ScheduleService, TrainerService, IsUserInterceptor, JwtService, ConfigService, CronService, AdminService, UserCreatedEvent, ScheduleTrainerUpdate, NewTrainerAllotmentEvent],
   exports:[JwtModule]
 })
 export class AuthModule {}

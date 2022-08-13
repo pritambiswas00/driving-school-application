@@ -46,7 +46,7 @@ async function bootstrap() {
 
   const PORT = +configService.get("PORT"); 
   await app.listen(PORT, () => {
-       console.log(`Environment : ${configService.get("ENV")}`);
+       console.log(`Environment : ${configService.get<string>("ENV")}`);
        console.log(`Server listening at http://localhost:${PORT || process.env.PORT}`);
   });
 }

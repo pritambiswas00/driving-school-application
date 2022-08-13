@@ -1,18 +1,20 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, ServiceUnavailableException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { LazyModuleLoader } from "@nestjs/core";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { InjectModel } from "@nestjs/mongoose";
 import { ObjectId } from "mongodb";
 import { Model, Types} from "mongoose";
 import { ScheduleStatus } from "src/Dtos/schedule.dtos";
 import { TrainerCreate, TrainerStatus, TrainerUpdate } from "src/Dtos/trainer.dto";
 import { Trainer, TrainerDocument } from "src/Entity/trainer.model";
+import { TrainerEmailPayload, TrainerEventNames } from "src/Events/Emit/trainer.emit";
 import { UtilService } from "src/Utils/Utils";
 
 
 @Injectable()
 export class TrainerService{
-    constructor(@InjectModel(Trainer.name) private readonly trainerModel: Model<TrainerDocument>, private readonly configService: ConfigService, private readonly utilService: UtilService, private readonly lazyModuleLoader: LazyModuleLoader){}
+    constructor(@InjectModel(Trainer.name) private readonly trainerModel: Model<TrainerDocument>, private readonly configService: ConfigService, private readonly utilService: UtilService, private readonly lazyModuleLoader: LazyModuleLoader, private readonly eventEmitter: EventEmitter2){}
 
     async findTrainerBasedOnEmail(email : string) {
          const isTrainerExist = await this.trainerModel.findOne({ email : email });
@@ -113,6 +115,7 @@ export class TrainerService{
                },
                $set : { updatedAt: date }
            });
+           await this.eventEmitter.emitAsync(TrainerEventNames.TRAINER_ALLOTMENT, new TrainerEmailPayload(email, phonenumber, scheduledate, scheduletime, status));
            return trainer;
     }
 
